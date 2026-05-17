@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dreamplay.ci-bot</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Update these paths after running: which python and pwd -->
+        <string>/Users/ravishrana/Desktop/Cursor/Competitive DP Agent/.venv/bin/python</string>
+        <string>/Users/ravishrana/Desktop/Cursor/Competitive DP Agent/main.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/ravishrana/Desktop/Cursor/Competitive DP Agent</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/ravishrana/Desktop/Cursor/Competitive DP Agent/data/ci_bot.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/ravishrana/Desktop/Cursor/Competitive DP Agent/data/ci_bot_error.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/ravishrana/Desktop/Cursor/Competitive DP Agent/.venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- Throttle restarts: don't restart more than once per 10 seconds -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+</dict>
+</plist>

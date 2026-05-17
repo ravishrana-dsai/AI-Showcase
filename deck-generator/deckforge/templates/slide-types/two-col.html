@@ -1,0 +1,44 @@
+<section class="slide">
+  <div class="slide-bg"></div>
+  <div class="slide-inner">
+    <div class="accent-bar"></div>
+    <div class="label">{{deck.client}}</div>
+    <h2 class="heading-lg" style="margin-top: 12px; margin-bottom: 32px;">{{slide.heading}}</h2>
+
+    <div class="slide-cols">
+      <!-- Left column -->
+      <div class="slide-col">
+        <!-- If left.type === "bullets" -->
+        <ul class="bullet-list">
+          <!-- Repeat for each item in slide.left.items -->
+          <li>{{item}}</li>
+        </ul>
+
+        <!-- If left.type === "text" -->
+        <!-- <p class="body-text">{{slide.left.items[0]}}</p> -->
+
+        <!-- If left.type === "image" -->
+        <!-- <img class="col-image" src="{{slide.left.src}}" alt="" /> -->
+      </div>
+
+      <!-- Right column -->
+      <div class="slide-col slide-col--divider">
+        <!-- If right.type === "bullets" -->
+        <ul class="bullet-list">
+          <!-- Repeat for each item in slide.right.items -->
+          <li>{{item}}</li>
+        </ul>
+
+        <!-- If right.type === "text" -->
+        <!-- <p class="body-text">{{slide.right.items[0]}}</p> -->
+
+        <!-- If right.type === "image" -->
+        <!-- <img class="col-image" src="{{slide.right.src}}" alt="" /> -->
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="footer-client">{{deck.client}}</span>
+    <span class="footer-slide-num">{{slide.id}}</span>
+  </div>
+</section>

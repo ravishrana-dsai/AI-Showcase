@@ -1,0 +1,19 @@
+{
+  "name": "deckforge",
+  "version": "2.0.0",
+  "description": "AI-powered consulting slide deck generator with a local web dashboard.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "generate": "node scripts/generate.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "ajv": "^8.0.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "jszip": "^3.10.1",
+    "multer": "^2.1.1",
+    "puppeteer": "^22.0.0"
+  }
+}

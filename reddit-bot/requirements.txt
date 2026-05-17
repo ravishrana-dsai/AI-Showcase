@@ -1,0 +1,15 @@
+# Reddit Cricket Bot Dependencies
+# ================================
+# Install with: pip install -r requirements.txt
+
+# Browser automation (no Reddit API needed!)
+playwright>=1.41.0
+
+# Google Gemini AI (FREE!)
+google-generativeai>=0.3.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Rich console output for analytics dashboard
+rich>=13.7.0

@@ -1,0 +1,48 @@
+# AI providers
+anthropic>=0.40.0
+google-genai>=0.8.0
+
+# Web framework
+flask>=3.0.0
+
+# Web scraping
+playwright>=1.49.0
+requests>=2.25.0
+beautifulsoup4>=4.12.0
+
+# App store reviews
+google-play-scraper>=1.2.7
+# app-store-scraper — conflicts with server deps; install locally if needed
+
+# News & feeds
+feedparser>=6.0.11
+newsapi-python>=0.2.7
+
+# Social signals
+praw>=7.8.1
+
+# Google Trends
+pytrends>=4.9.2
+
+# Slack
+slack-sdk>=3.33.0
+
+# Scheduling
+apscheduler>=3.10.4
+
+# Config & validation
+pydantic-settings>=2.6.0
+pydantic>=2.10.0
+python-dotenv>=1.0.1
+
+# Database
+psycopg2-binary>=2.9.0
+
+# Utilities
+tenacity>=9.0.0
+structlog>=24.4.0
+rich>=13.9.0
+
+# Testing
+pytest>=8.3.0
+pytest-asyncio>=0.24.0

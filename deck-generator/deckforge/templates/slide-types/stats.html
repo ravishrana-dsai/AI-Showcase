@@ -1,0 +1,21 @@
+<section class="slide">
+  <div class="slide-bg"></div>
+  <div class="slide-inner">
+    <div class="label">{{deck.client}}</div>
+    <h2 class="heading-lg" style="margin-top: 12px;">{{slide.heading}}</h2>
+
+    <!-- Stats grid: one .stat-card.glass-card per item in slide.stats -->
+    <div class="stats-grid">
+      <!-- Repeat for each stat in slide.stats -->
+      <div class="stat-card glass-card">
+        <div class="stat-value">{{stat.value}}</div>
+        <div class="stat-label">{{stat.label}}</div>
+        <div class="stat-delta">{{stat.delta}}</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="footer-client">{{deck.client}}</span>
+    <span class="footer-slide-num">{{slide.id}}</span>
+  </div>
+</section>

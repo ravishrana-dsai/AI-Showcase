@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Usage Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0f0f12; --surface: #18181f; --surface2: #1f1f2a;
+    --border: rgba(255,255,255,0.07); --text: #f0f0f5; --muted: #8888a0;
+    --accent: #7c6af7; --accent2: #5ee0c0; --amber: #f0b84b;
+    --red: #f06b6b; --green: #5ee0a0; --claude: #d97757;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; font-size: 13px; overflow-x: hidden; }
+
+  .titlebar { height: 38px; -webkit-app-region: drag; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px 0 80px; gap: 8px; }
+  .titlebar h1 { font-size: 13px; font-weight: 500; color: var(--muted); letter-spacing: 0.01em; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--claude); }
+  #live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-left: auto; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .layout { display: grid; grid-template-columns: 210px 1fr; height: calc(100vh - 38px); }
+
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 0; overflow-y: auto; }
+  .sidebar-section { padding: 0 12px; margin-bottom: 20px; }
+  .sidebar-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; padding: 0 4px 8px; }
+
+  .stat-card { background: var(--surface2); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid var(--border); }
+  .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .stat-value { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .stat-value.green  { color: var(--green); }
+  .stat-value.amber  { color: var(--amber); }
+  .stat-value.accent { color: var(--accent); }
+
+  .source-pill { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px; margin-bottom: 2px; }
+  .source-pill:hover { background: var(--surface2); }
+  .source-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .source-name { flex: 1; color: var(--text); font-size: 12px; }
+  .source-count { font-size: 11px; color: var(--muted); }
+
+  .main { display: flex; flex-direction: column; overflow: hidden; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; background: var(--surface); flex-shrink: 0; }
+  .tab { padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .content { flex: 1; overflow-y: auto; padding: 20px; }
+
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 16px; }
+  .chart-title { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .chart-wrap { position: relative; height: 160px; }
+
+  .table-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+  .col-time    { width: 110px; }
+  .col-source  { width: 82px; }
+  .col-model   { flex: 1; }
+  .col-tokens  { width: 72px; text-align: right; }
+  .col-cost    { width: 72px; text-align: right; }
+  .table-header { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .table-header span { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+  .table-row { display: flex; gap: 8px; padding: 9px 16px; border-bottom: 1px solid var(--border); align-items: center; transition: background 0.1s; }
+  .table-row:hover { background: var(--surface2); }
+  .table-row:last-child { border-bottom: none; }
+  .table-row span { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .muted { color: var(--muted) !important; font-size: 11px !important; }
+
+  .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.03em; }
+  .tag-code    { background: rgba(94,224,192,0.12);  color: #5ee0c0; }
+  .tag-browser { background: rgba(240,107,107,0.12); color: var(--red); }
+  .tag-cowork  { background: rgba(255,165,0,0.12);   color: #ffa500; }
+  .tag-desktop { background: rgba(167,139,250,0.12); color: #a78bfa; }
+
+  .cost-val  { color: var(--green) !important; font-variant-numeric: tabular-nums; }
+  .token-val { font-variant-numeric: tabular-nums; }
+
+  .cache-row { display: flex; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+  .cache-pill { font-size: 10px; color: var(--muted); background: var(--surface2); border-radius: 4px; padding: 1px 6px; }
+
+  /* Sessions */
+  .session-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+  .session-card:hover { border-color: rgba(255,255,255,0.14); }
+  .session-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+  .session-project { font-size: 13px; font-weight: 500; color: var(--text); }
+  .session-cost { font-size: 14px; font-weight: 600; color: var(--green); font-variant-numeric: tabular-nums; }
+  .session-meta { display: flex; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
+  .session-meta span { font-size: 11px; color: var(--muted); }
+  .session-meta .hi { color: var(--accent2); }
+  .session-bars { display: flex; height: 4px; border-radius: 2px; overflow: hidden; gap: 1px; margin-bottom: 0; }
+  .bar-input  { background: rgba(124,106,247,0.8); }
+  .bar-cwrite { background: rgba(240,184,75,0.7); }
+  .bar-cread  { background: rgba(94,224,192,0.5); }
+  .bar-output { background: rgba(94,224,160,0.8); }
+
+  .session-detail { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .session-card.open .session-detail { display: block; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+  .detail-box { background: var(--surface2); border-radius: 8px; padding: 10px 12px; }
+  .detail-box-title { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .token-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .token-row-label { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .token-row-val { font-size: 11px; font-variant-numeric: tabular-nums; }
+  .legend-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .tool-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tool-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 3px 8px; font-size: 11px; color: var(--text); display: flex; align-items: center; gap: 4px; }
+  .tool-chip-count { color: var(--accent2); font-weight: 600; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: var(--muted); gap: 8px; }
+  .empty-state .icon { font-size: 32px; opacity: 0.4; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* Pricing alert banner */
+  .pricing-banner { background: rgba(240,184,75,0.08); border: 1px solid rgba(240,184,75,0.25); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: none; }
+  .pricing-banner.visible { display: block; }
+  .pricing-banner-header { display: flex; align-items: center; justify-content: space-between; }
+  .pricing-banner-title { font-size: 12px; font-weight: 600; color: var(--amber); }
+  .pricing-banner-actions { display: flex; gap: 8px; }
+  .btn { padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; }
+  .btn-apply   { background: var(--amber); color: #0f0f12; }
+  .btn-dismiss { background: var(--surface2); color: var(--muted); }
+  .btn:hover   { opacity: 0.85; }
+  .pricing-diff-table { margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; display: none; }
+  .pricing-diff-table.open { display: block; }
+  .diff-row { display: grid; grid-template-columns: 130px repeat(4, 1fr); gap: 4px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 11px; align-items: center; }
+  .diff-row:last-child { border-bottom: none; }
+  .diff-model { font-weight: 600; color: var(--text); }
+  .diff-cell  { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .diff-cell.changed { color: var(--amber); }
+  .diff-header { display: grid; grid-template-columns: 130px repeat(4, 1fr); gap: 4px; padding: 0 0 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .diff-toggle { font-size: 11px; color: var(--muted); cursor: pointer; margin-top: 6px; text-decoration: underline; text-decoration-style: dotted; }
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="dot"></div>
+  <h1>Claude Usage Tracker</h1>
+  <div id="live-dot" title="Live"></div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Today</div>
+      <div class="stat-card">
+        <div class="stat-label">Cost</div>
+        <div class="stat-value green" id="s-cost">$0.0000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tokens</div>
+        <div class="stat-value accent" id="s-tokens">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">API Calls</div>
+        <div class="stat-value amber" id="s-calls">0</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">This Week</div>
+      <div class="stat-card">
+        <div class="stat-label">Cost</div>
+        <div class="stat-value green" id="w-cost">$0.0000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">API Calls</div>
+        <div class="stat-value amber" id="w-calls">0</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">This Month</div>
+      <div class="stat-card">
+        <div class="stat-label">Cost</div>
+        <div class="stat-value green" id="m-cost">$0.0000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">API Calls</div>
+        <div class="stat-value amber" id="m-calls">0</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Sources</div>
+      <div id="source-list"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="tabs">
+      <div class="tab active" data-tab="overview">Overview</div>
+      <div class="tab" data-tab="calls">Calls</div>
+      <div class="tab" data-tab="sessions">Sessions</div>
+    </div>
+
+    <div class="content">
+      <div id="pricing-banner" class="pricing-banner">
+        <div class="pricing-banner-header">
+          <span class="pricing-banner-title" id="pricing-banner-title">Pricing update available</span>
+          <div class="pricing-banner-actions">
+            <span class="diff-toggle" onclick="toggleDiffTable()">Show details</span>
+            <button class="btn btn-apply"   onclick="applyPricingUpdate()">Apply</button>
+            <button class="btn btn-dismiss" onclick="dismissPricingDiff()">Dismiss</button>
+          </div>
+        </div>
+        <div id="pricing-diff-table" class="pricing-diff-table">
+          <div class="diff-header">
+            <span>Model</span><span style="text-align:right">Input</span><span style="text-align:right">Cache write</span><span style="text-align:right">Cache read</span><span style="text-align:right">Output</span>
+          </div>
+          <div id="diff-rows"></div>
+        </div>
+      </div>
+
+      <div id="tab-overview" class="tab-pane">
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">Tokens — last 7 days</div>
+            <div class="chart-wrap"><canvas id="chart-tokens"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Cost — last 7 days</div>
+            <div class="chart-wrap"><canvas id="chart-cost"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-bottom:16px;">
+          <div class="chart-title">Calls by source</div>
+          <div class="chart-wrap" style="height:100px;"><canvas id="chart-sources"></canvas></div>
+        </div>
+      </div>
+
+      <div id="tab-calls" class="tab-pane" style="display:none;">
+        <div class="table-card">
+          <div class="table-header">
+            <span class="col-time">Time</span>
+            <span class="col-source">Source</span>
+            <span class="col-model">Model</span>
+            <span class="col-tokens">Tokens</span>
+            <span class="col-cost">Cost</span>
+          </div>
+          <div id="calls-list"></div>
+        </div>
+      </div>
+
+      <div id="tab-sessions" class="tab-pane" style="display:none;">
+        <div id="sessions-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { ipcRenderer } = require('electron');
+
+let stats = null;
+let tokenChart, costChart, sourcesChart;
+
+const SOURCE_COLORS = {
+  'Claude Code': '#5ee0c0',
+  'Claude.ai':   '#f06b6b',
+  'Cowork':      '#ffa500',
+  'Chat':        '#a78bfa',
+};
+
+function tagClass(p) {
+  if (p === 'Claude Code') return 'tag-code';
+  if (p === 'Cowork')      return 'tag-cowork';
+  if (p === 'Chat')        return 'tag-desktop';
+  return 'tag-browser';
+}
+function tagLabel(p) {
+  if (p === 'Claude Code') return 'Code';
+  if (p === 'Cowork')      return 'Cowork';
+  if (p === 'Chat')        return 'Chat';
+  return 'Web';
+}
+
+function fmt(n)     { return (n || 0).toLocaleString(); }
+function fmtCost(n) { return '$' + (n || 0).toFixed(4); }
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+function shortModel(m) {
+  if (!m || m === 'unknown') return 'unknown';
+  return m.replace('claude-', '').replace(/-\d{8}$/, '');
+}
+function totalTok(d) {
+  return (d.inputTokens || 0) + (d.cacheWriteTokens || 0) + (d.cacheReadTokens || 0) + (d.outputTokens || 0);
+}
+
+function renderStats(s) {
+  stats = s;
+  const t = s.todayData;
+
+  document.getElementById('s-cost').textContent   = fmtCost(t.cost);
+  document.getElementById('s-tokens').textContent = fmt(totalTok(t));
+  document.getElementById('s-calls').textContent  = fmt(t.calls);
+
+  const w = s.weekData  || {};
+  const m = s.monthData || {};
+  document.getElementById('w-cost').textContent  = fmtCost(w.cost);
+  document.getElementById('w-calls').textContent = fmt(w.calls);
+  document.getElementById('m-cost').textContent  = fmtCost(m.cost);
+  document.getElementById('m-calls').textContent = fmt(m.calls);
+
+  const sidebarBySource = s.sourceCounts || {};
+  document.getElementById('source-list').innerHTML = Object.entries(sidebarBySource).map(([p, n]) =>
+    `<div class="source-pill">
+      <div class="source-dot" style="background:${SOURCE_COLORS[p] || '#888'}"></div>
+      <span class="source-name">${p}</span>
+      <span class="source-count">${n}</span>
+    </div>`
+  ).join('') || '<div style="padding:4px 8px;color:var(--muted);font-size:12px;">No calls yet</div>';
+
+  renderCharts(s);
+  renderCalls(s.recentCalls);
+  renderSessions(s.sessions);
+}
+
+function renderCharts(s) {
+  const days   = s.last7;
+  const labels = days.map(d => new Date(d.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+  const axisStyle = {
+    grid: { color: 'rgba(255,255,255,0.04)' },
+    ticks: { color: '#8888a0', font: { size: 11 } },
+  };
+
+  if (tokenChart) tokenChart.destroy();
+  tokenChart = new Chart(document.getElementById('chart-tokens'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Input',       data: days.map(d => d.inputTokens),      backgroundColor: 'rgba(124,106,247,0.7)' },
+        { label: 'Cache write', data: days.map(d => d.cacheWriteTokens), backgroundColor: 'rgba(240,184,75,0.5)'  },
+        { label: 'Cache read',  data: days.map(d => d.cacheReadTokens),  backgroundColor: 'rgba(94,224,192,0.35)' },
+        { label: 'Output',      data: days.map(d => d.outputTokens),     backgroundColor: 'rgba(94,224,160,0.6)'  },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#8888a0', font: { size: 10 }, boxWidth: 10 } } },
+      scales: { x: { ...axisStyle, stacked: true }, y: { ...axisStyle, stacked: true } },
+    },
+  });
+
+  if (costChart) costChart.destroy();
+  costChart = new Chart(document.getElementById('chart-cost'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Cost ($)', data: days.map(d => +d.cost.toFixed(5)),
+        borderColor: '#5ee0a0', backgroundColor: 'rgba(94,224,160,0.1)',
+        fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: '#5ee0a0',
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: axisStyle, y: axisStyle },
+    },
+  });
+
+  const bySource  = s.sourceCounts || {};
+  const srcLabels = Object.keys(bySource);
+  if (sourcesChart) sourcesChart.destroy();
+  sourcesChart = new Chart(document.getElementById('chart-sources'), {
+    type: 'bar',
+    data: {
+      labels: srcLabels,
+      datasets: [{ data: srcLabels.map(p => bySource[p]), backgroundColor: srcLabels.map(p => SOURCE_COLORS[p] || '#888') }],
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: axisStyle, y: { grid: { display: false }, ticks: { color: '#f0f0f5', font: { size: 12 } } } },
+    },
+  });
+}
+
+function renderCalls(calls) {
+  const el = document.getElementById('calls-list');
+  if (!calls.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">◉</div><p>No calls yet</p></div>';
+    return;
+  }
+  el.innerHTML = calls.map(c => {
+    const tok = (c.inputTokens || 0) + (c.cacheWriteTokens || 0) + (c.cacheReadTokens || 0) + (c.outputTokens || 0);
+    const cacheDetail = (c.cacheWriteTokens || c.cacheReadTokens)
+      ? `<div class="cache-row">
+           ${c.cacheWriteTokens ? `<span class="cache-pill">write ${fmt(c.cacheWriteTokens)}</span>` : ''}
+           ${c.cacheReadTokens  ? `<span class="cache-pill">read ${fmt(c.cacheReadTokens)}</span>`   : ''}
+         </div>`
+      : '';
+    return `<div class="table-row">
+      <span class="col-time muted">${fmtTime(c.ts)}</span>
+      <span class="col-source"><span class="tag ${tagClass(c.product)}">${tagLabel(c.product)}</span></span>
+      <span class="col-model">
+        <div class="muted">${shortModel(c.model)}</div>
+        ${cacheDetail}
+      </span>
+      <span class="col-tokens token-val muted">${fmt(tok)}</span>
+      <span class="col-cost cost-val">${fmtCost(c.cost)}</span>
+    </div>`;
+  }).join('');
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).style.display = '';
+    if (tab.dataset.tab === 'overview' && stats) renderCharts(stats);
+  });
+});
+
+function renderSessions(sessions) {
+  const el = document.getElementById('sessions-list');
+  if (!sessions || !sessions.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">◉</div><p>No sessions yet</p></div>';
+    return;
+  }
+
+  el.innerHTML = sessions.map(s => {
+    const total   = s.inputTokens + s.cacheWriteTokens + s.cacheReadTokens + s.outputTokens || 1;
+    const pct     = v => Math.max(1, Math.round(v / total * 100));
+    const date    = new Date(s.lastTs).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const savings = total > 0 ? Math.round(s.cacheReadTokens / total * 100) : 0;
+
+    const tokenRows = [
+      { label: 'Input',                    color: 'rgba(124,106,247,0.8)', val: s.inputTokens  },
+      { label: 'Cache write — skills (1h)', color: 'rgba(240,184,75,0.9)', val: s.cacheWrite1h },
+      { label: 'Cache write — context (5m)',color: 'rgba(240,184,75,0.5)', val: s.cacheWrite5m },
+      { label: 'Cache read',               color: 'rgba(94,224,192,0.5)',  val: s.cacheReadTokens },
+      { label: 'Output',                   color: 'rgba(94,224,160,0.8)',  val: s.outputTokens },
+    ].filter(r => r.val > 0);
+
+    const tools = Object.entries(s.toolCounts || {})
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, count]) => `<div class="tool-chip"><span>${name}</span><span class="tool-chip-count">${count}</span></div>`)
+      .join('');
+
+    return `<div class="session-card" onclick="this.classList.toggle('open')">
+      <div class="session-top">
+        <span class="session-project">${s.project}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="tag ${tagClass(s.product)}">${tagLabel(s.product)}</span>
+          <span class="session-cost">${fmtCost(s.cost)}</span>
+        </span>
+      </div>
+      <div class="session-meta">
+        <span class="hi">${shortModel(s.model)}</span>
+        <span>${s.calls} turns</span>
+        <span>${fmt(s.totalTokens)} tokens</span>
+        <span>${savings}% cache hits</span>
+        <span>${date}</span>
+        <span style="font-size:10px;font-family:'SF Mono',monospace;color:var(--muted)">${s.sessionId.slice(0,8)}</span>
+      </div>
+      <div class="session-bars">
+        <div class="bar-input"  style="width:${pct(s.inputTokens)}%"></div>
+        <div class="bar-cwrite" style="width:${pct(s.cacheWriteTokens)}%"></div>
+        <div class="bar-cread"  style="width:${pct(s.cacheReadTokens)}%"></div>
+        <div class="bar-output" style="width:${pct(s.outputTokens)}%"></div>
+      </div>
+      <div class="session-detail">
+        <div class="detail-grid">
+          <div class="detail-box">
+            <div class="detail-box-title">Token breakdown</div>
+            ${tokenRows.map(r => `
+              <div class="token-row">
+                <span class="token-row-label">
+                  <span class="legend-dot" style="background:${r.color}"></span>${r.label}
+                </span>
+                <span class="token-row-val" style="color:var(--muted)">${fmt(r.val)}</span>
+              </div>`).join('')}
+          </div>
+          <div class="detail-box">
+            <div class="detail-box-title">Tools used</div>
+            ${tools ? `<div class="tool-chips">${tools}</div>` : '<span style="font-size:11px;color:var(--muted)">No tools</span>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+ipcRenderer.invoke('get-stats').then(renderStats);
+ipcRenderer.on('stats-update', (_, s) => renderStats(s));
+
+// ── Pricing diff banner ───────────────────────────────────────────────────────
+
+let pendingDiffs = [];
+
+function showPricingBanner(diffs) {
+  pendingDiffs = diffs;
+  const n = diffs.length;
+  document.getElementById('pricing-banner-title').textContent =
+    `Pricing update available: ${n} model${n > 1 ? 's' : ''} changed`;
+
+  document.getElementById('diff-rows').innerHTML = diffs.map(({ key, current: c, fetched: f }) => {
+    const cell = (field) => {
+      const changed = Math.abs((f[field] || 0) - (c[field] || 0)) > 0.001;
+      return `<span class="diff-cell${changed ? ' changed' : ''}">`
+           + `$${(c[field]||0).toFixed(2)} → $${(f[field]||0).toFixed(2)}</span>`;
+    };
+    return `<div class="diff-row">
+      <span class="diff-model">${key}</span>
+      ${cell('input')}${cell('cacheWrite')}${cell('cacheRead')}${cell('output')}
+    </div>`;
+  }).join('');
+
+  document.getElementById('pricing-banner').classList.add('visible');
+}
+
+function toggleDiffTable() {
+  const table  = document.getElementById('pricing-diff-table');
+  const toggle = document.querySelector('.diff-toggle');
+  const open   = table.classList.toggle('open');
+  toggle.textContent = open ? 'Hide details' : 'Show details';
+}
+
+function applyPricingUpdate() {
+  ipcRenderer.invoke('apply-pricing-update', pendingDiffs).then(renderStats);
+  document.getElementById('pricing-banner').classList.remove('visible');
+  pendingDiffs = [];
+}
+
+function dismissPricingDiff() {
+  ipcRenderer.invoke('dismiss-pricing-diff');
+  document.getElementById('pricing-banner').classList.remove('visible');
+  pendingDiffs = [];
+}
+
+ipcRenderer.on('pricing-diff', (_, diffs) => showPricingBanner(diffs));
+
+// Show banner on open if there's a pending diff from a previous check
+ipcRenderer.invoke('get-pricing-state').then(state => {
+  if (state.pendingDiff && state.pendingDiff.length) showPricingBanner(state.pendingDiff);
+});
+</script>
+</body>
+</html>

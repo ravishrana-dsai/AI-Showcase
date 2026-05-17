@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 220px; min-height: 140px;
+    background: #18181f; color: #f0f0f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    font-size: 13px; padding: 16px;
+  }
+  h1 { font-size: 12px; font-weight: 600; color: #8888a0; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .label { font-size: 12px; color: #8888a0; }
+  .value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .green  { color: #5ee0a0; }
+  .accent { color: #7c6af7; }
+  .amber  { color: #f0b84b; }
+  .footer { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.07); font-size: 11px; color: #8888a0; text-align: center; }
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #5ee0a0; margin-right: 4px; animation: pulse 2s infinite; vertical-align: middle; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+</style>
+</head>
+<body>
+<h1>Claude.ai — Today</h1>
+<div class="row">
+  <span class="label">Cost</span>
+  <span class="value green"  id="cost">$0.0000</span>
+</div>
+<div class="row">
+  <span class="label">Tokens</span>
+  <span class="value accent" id="tokens">0</span>
+</div>
+<div class="row">
+  <span class="label">Calls</span>
+  <span class="value amber"  id="calls">0</span>
+</div>
+<div class="footer">
+  <span class="dot"></span>Forwarding to tracker app
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

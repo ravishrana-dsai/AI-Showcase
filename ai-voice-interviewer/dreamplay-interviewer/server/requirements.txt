@@ -1,0 +1,7 @@
+pipecat-ai[daily,deepgram,cartesia,anthropic,silero]==0.0.36
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-dotenv==1.0.1
+anthropic~=0.28.1
+httpx>=0.27.0
+prisma==0.13.1

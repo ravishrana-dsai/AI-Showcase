@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DP Events Tracker</title>
+  <style>
+    :root {
+      --bg:             #f4f5f7;
+      --surface:        #ffffff;
+      --surface-2:      #f1f3f5;
+      --border:         #e4e7eb;
+      --border-strong:  #ced4da;
+      --text:           #111827;
+      --text-2:         #374151;
+      --text-3:         #9ca3af;
+      --accent:         #2563eb;
+      --accent-hover:   #1d4ed8;
+      --accent-light:   #eff6ff;
+      --danger:         #dc2626;
+      --danger-light:   #fef2f2;
+      --success:        #16a34a;
+      --success-light:  #dcfce7;
+      --warning:        #d97706;
+      --warning-light:  #fef3c7;
+      --radius:         10px;
+      --radius-sm:      6px;
+      --shadow:         0 1px 4px rgba(0,0,0,0.08);
+      --shadow-lg:      0 16px 40px rgba(0,0,0,0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+    .header-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 16px;
+      z-index: 99;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 26px;
+      line-height: 52px;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.45);
+      transition: background 0.12s, transform 0.12s;
+    }
+    .fab:active { background: var(--accent-hover); transform: scale(0.94); }
+
+    /* ── Main ── */
+    .main { padding: 14px 16px 100px; }
+
+    /* ── Stats grid ── */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.4px; }
+    .stat-value { font-size: 24px; font-weight: 700; color: var(--accent); margin-top: 2px; }
+
+    /* ── Search ── */
+    .search-wrap { position: relative; margin-bottom: 14px; }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      pointer-events: none;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 10px 12px 10px 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+    /* ── Cards ── */
+    .cards { display: flex; flex-direction: column; gap: 10px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-body { padding: 14px 14px 10px; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .card-name { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 9px;
+      border-radius: 99px;
+      font-size: 10.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .badge-green  { background: var(--success-light); color: #14532d; }
+    .badge-yellow { background: var(--warning-light); color: #78350f; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+    .badge-gray   { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+      margin-bottom: 10px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    .meta-item svg { flex-shrink: 0; }
+
+    /* ── Details chips ── */
+    .details-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .d-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 3px 9px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-green  { background: var(--success); }
+    .dot-yellow { background: var(--warning); }
+    .dot-red    { background: var(--danger); }
+    .dot-gray   { background: var(--border-strong); }
+
+    /* ── Card footer ── */
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px 10px;
+    }
+
+    .card-notes {
+      font-size: 11px;
+      color: var(--text-3);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-right: 10px;
+    }
+
+    .btn-edit {
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-2);
+      transition: all 0.12s;
+      flex-shrink: 0;
+    }
+    .btn-edit:active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+    /* ── Empty / loading ── */
+    .placeholder { text-align: center; padding: 60px 20px; color: var(--text-3); }
+    .placeholder-icon { font-size: 30px; margin-bottom: 10px; }
+
+    /* ── Overlay ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── Bottom sheet panel ── */
+    .panel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      max-height: 92vh;
+      background: var(--surface);
+      z-index: 201;
+      border-radius: 16px 16px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+    }
+    .panel.open { transform: translateY(0); }
+
+    .panel-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border-strong);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+
+    .panel-head {
+      padding: 12px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .panel-head h2 { font-size: 16px; font-weight: 600; }
+
+    .panel-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      line-height: 1;
+      padding: 4px 6px;
+      color: var(--text-3);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+    }
+    .panel-close:active { background: var(--surface-2); }
+
+    .panel-body { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+
+    .panel-foot {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    .panel-foot-right { display: flex; gap: 8px; }
+
+    /* ── Form ── */
+    .field { margin-bottom: 14px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+    }
+
+    .field textarea { resize: none; min-height: 80px; }
+
+    .field-group {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .field-group-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .other-input { margin-top: 8px; display: none; }
+    .other-input.show { display: block; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: background 0.12s;
+    }
+    .btn:active { opacity: 0.85; }
+
+    .btn-primary  { background: var(--accent); color: #fff; }
+    .btn-primary:active { background: var(--accent-hover); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger-text {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid transparent;
+      padding: 10px 10px;
+    }
+    .btn-danger-text:active { background: var(--danger-light); }
+
+    /* ── Pipeline pills ── */
+    .pipeline-scroll {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      position: sticky;
+      top: 57px;
+      z-index: 99;
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .pipeline-scroll::-webkit-scrollbar { display: none; }
+
+    .pipe-pill {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 13px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+    .pipe-pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .pipe-pill-count {
+      font-size: 10px;
+      font-weight: 700;
+      opacity: 0.75;
+    }
+
+    .pipe-upcoming  { background: #dbeafe; color: #1e40af; }
+    .pipe-intalks   { background: var(--warning-light); color: #78350f; }
+    .pipe-dealsdone { background: var(--success-light); color: #14532d; }
+    .pipe-completed { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #1e293b;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      z-index: 999;
+      transition: transform 0.22s;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.ok   { background: #14532d; }
+    .toast.err  { background: #7f1d1d; }
+  </style>
+</head>
+<body class="light">
+
+<!-- Header -->
+<div class="header">
+  <div>
+    <h1>DP Events Tracker</h1>
+    <div class="header-sub" id="header-sub">Loading...</div>
+  </div>
+</div>
+
+<!-- Pipeline pill bar -->
+<div class="pipeline-scroll" id="pipeline-scroll">
+  <button class="pipe-pill active" id="mpipe-Upcoming"  onclick="setPipeline('Upcoming',  this)">Upcoming  <span class="pipe-pill-count" id="mpc-Upcoming">0</span></button>
+  <button class="pipe-pill"        id="mpipe-In Talks"  onclick="setPipeline('In Talks',  this)">In Talks  <span class="pipe-pill-count" id="mpc-In Talks">0</span></button>
+  <button class="pipe-pill"        id="mpipe-Deal Done" onclick="setPipeline('Deal Done', this)">Deal Done <span class="pipe-pill-count" id="mpc-Deal Done">0</span></button>
+  <button class="pipe-pill"        id="mpipe-Completed" onclick="setPipeline('Completed', this)">Completed <span class="pipe-pill-count" id="mpc-Completed">0</span></button>
+  <button class="pipe-pill"        id="mpipe-all"       onclick="setPipeline('all',       this)">All       <span class="pipe-pill-count" id="mpc-all">0</span></button>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Total Events</div>
+      <div class="stat-value" id="s-total">-</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Cities</div>
+      <div class="stat-value" id="s-cities">-</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Organizers</div>
+      <div class="stat-value" id="s-orgs">-</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pending</div>
+      <div class="stat-value" id="s-pending">-</div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="9" cy="9" r="7"/><path d="M14 14l4 4"/>
+    </svg>
+    <input id="search" type="search" placeholder="Search events, organizers, cities..." oninput="filterCards()">
+  </div>
+
+  <div class="cards" id="cards">
+    <div class="placeholder">Loading events...</div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openPanel(null)" aria-label="Add event">+</button>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- Bottom Sheet Panel -->
+<div class="panel" id="panel">
+  <div class="panel-handle"></div>
+
+  <div class="panel-head">
+    <h2 id="panel-title">Add Event</h2>
+    <button class="panel-close" onclick="closePanel()">&#215;</button>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="field">
+      <label>Event Name *</label>
+      <input type="text" id="f-eventName" placeholder="e.g. Padel Rise 8.0">
+    </div>
+
+    <div class="field">
+      <label>Pipeline *</label>
+      <select id="f-pipeline">
+        <option value="Upcoming">Upcoming</option>
+        <option value="In Talks">In Talks</option>
+        <option value="Deal Done">Deal Done</option>
+        <option value="Completed">Completed</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Organizer</label>
+      <input type="text" id="f-organizer" placeholder="e.g. The Sporzz">
+    </div>
+
+    <div class="field">
+      <label>Organizer PoC</label>
+      <input type="text" id="f-organizerPoc" placeholder="Point of contact name">
+    </div>
+
+    <div class="field">
+      <label>Organizer Contact</label>
+      <input type="tel" id="f-organizerContact" placeholder="Phone number">
+    </div>
+
+    <div class="field">
+      <label>Venue Name</label>
+      <input type="text" id="f-venueName" placeholder="e.g. HSBC Racquet Club">
+    </div>
+
+    <div class="field">
+      <label>City</label>
+      <input type="text" id="f-city" list="city-list" placeholder="e.g. Mumbai" autocomplete="off">
+      <datalist id="city-list"></datalist>
+    </div>
+
+    <div class="field">
+      <label>No. of Courts</label>
+      <input type="number" id="f-noOfCourts" placeholder="e.g. 4" min="0">
+    </div>
+
+    <div class="field">
+      <label>Start Date</label>
+      <input type="date" id="f-startDate">
+    </div>
+
+    <div class="field">
+      <label>End Date</label>
+      <input type="date" id="f-endDate">
+    </div>
+
+    <div class="field">
+      <label>Partnered As</label>
+      <select id="f-partneredAs" onchange="toggleOther('f-partneredAs','f-partneredAs-other')">
+        <option value="">Select...</option>
+        <option>Title Sponsor</option>
+        <option>Co-Sponsor</option>
+        <option>Sports AI Partner</option>
+        <option>Associate Sponsor</option>
+        <option>Technology Partner</option>
+        <option>Media Partner</option>
+        <option>Official Supplier</option>
+        <option>Ground Partner</option>
+        <option value="Other">Other</option>
+      </select>
+      <input type="text" id="f-partneredAs-other" class="other-input" placeholder="Describe partnership type...">
+    </div>
+
+    <div class="field-group">
+      <div class="field-group-title">Event Details</div>
+
+      <div class="field">
+        <label>Player Details Received</label>
+        <select id="f-playerDetailsReceived">
+          <option value="">Select...</option>
+          <option>Yes</option>
+          <option>No</option>
+          <option>Partial</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Social Media Spoc</label>
+        <input type="text" id="f-socialMediaSpoc" placeholder="Name of SM point of contact">
+      </div>
+
+      <div class="field">
+        <label>Fixture / Schedule</label>
+        <select id="f-fixtureSchedule">
+          <option value="">Select...</option>
+          <option>Received</option>
+          <option>Pending</option>
+          <option>Not Required</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>No. of Requests</label>
+          <input type="number" id="f-noOfRequests" placeholder="0" min="0">
+        </div>
+        <div class="field" style="flex:1;margin-bottom:0">
+          <label>No. of Participants</label>
+          <input type="number" id="f-noOfParticipants" placeholder="0" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Brandings</label>
+      <input type="text" id="f-brandings" placeholder="e.g. Done on 19th March">
+    </div>
+
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Any additional notes..."></textarea>
+    </div>
+
+  </div>
+
+  <div class="panel-foot">
+    <button class="btn btn-danger-text" id="btn-delete" onclick="confirmDelete()" style="display:none">Delete</button>
+    <div class="panel-foot-right">
+      <button class="btn btn-ghost" onclick="closePanel()">Cancel</button>
+      <button class="btn btn-primary" id="btn-save" onclick="saveEvent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var allEvents      = [];
+  var editingRow     = null;
+  var activePipeline = 'Upcoming';
+
+  var PIPELINE_BADGE = {
+    'Upcoming':  'pipe-upcoming',
+    'In Talks':  'pipe-intalks',
+    'Deal Done': 'pipe-dealsdone',
+    'Completed': 'pipe-completed'
+  };
+
+  var PARTNER_OPTIONS = [
+    'Title Sponsor','Co-Sponsor','Sports AI Partner','Associate Sponsor',
+    'Technology Partner','Media Partner','Official Supplier','Ground Partner'
+  ];
+
+  var PARTNER_BADGE = {
+    'Title Sponsor':      'badge-blue',
+    'Co-Sponsor':         'badge-blue',
+    'Sports AI Partner':  'badge-green',
+    'Associate Sponsor':  'badge-gray',
+    'Technology Partner': 'badge-purple',
+    'Media Partner':      'badge-yellow',
+    'Official Supplier':  'badge-gray',
+    'Ground Partner':     'badge-gray'
+  };
+
+  window.onload = function() { loadEvents(); };
+
+  function loadEvents() {
+    google.script.run
+      .withSuccessHandler(onEventsLoaded)
+      .withFailureHandler(function(e) {
+        document.getElementById('cards').innerHTML =
+          '<div class="placeholder"><div class="placeholder-icon">⚠️</div>Failed to load: ' + esc(e.message) + '</div>';
+      })
+      .getEvents();
+  }
+
+  function onEventsLoaded(events) {
+    allEvents = events;
+    renderStats();
+    refreshCityList();
+    buildPipelinePills();
+    filterCards();
+    document.getElementById('header-sub').textContent =
+      events.length + ' event' + (events.length === 1 ? '' : 's') + ' tracked';
+  }
+
+  function renderStats() {
+    var cities  = new Set(allEvents.map(function(e) { return e.city; }).filter(Boolean));
+    var orgs    = new Set(allEvents.map(function(e) { return e.organizer; }).filter(Boolean));
+    var pending = allEvents.filter(function(e) {
+      return !e.playerDetailsReceived || e.playerDetailsReceived === 'No' ||
+             e.fixtureSchedule === 'Pending' || !e.fixtureSchedule;
+    }).length;
+
+    document.getElementById('s-total').textContent   = allEvents.length;
+    document.getElementById('s-cities').textContent  = cities.size;
+    document.getElementById('s-orgs').textContent    = orgs.size;
+    document.getElementById('s-pending').textContent = pending;
+  }
+
+  function refreshCityList() {
+    var dl = document.getElementById('city-list');
+    var seen = {};
+    dl.innerHTML = '';
+    allEvents.forEach(function(e) {
+      if (e.city && !seen[e.city]) {
+        seen[e.city] = true;
+        var opt = document.createElement('option');
+        opt.value = e.city;
+        dl.appendChild(opt);
+      }
+    });
+  }
+
+  function renderCards(events) {
+    var wrap = document.getElementById('cards');
+    if (!events.length) {
+      wrap.innerHTML = '<div class="placeholder"><div class="placeholder-icon">📋</div>No events yet. Tap + to add one.</div>';
+      return;
+    }
+    wrap.innerHTML = events.map(cardHtml).join('');
+  }
+
+  function cardHtml(e) {
+    var cls = PARTNER_BADGE[e.partneredAs] || 'badge-gray';
+    var badge = e.partneredAs
+      ? '<span class="badge ' + cls + '">' + esc(e.partneredAs) + '</span>'
+      : '';
+
+    var pdDot = e.playerDetailsReceived === 'Yes'    ? 'dot-green'
+              : e.playerDetailsReceived === 'Partial' ? 'dot-yellow'
+              : 'dot-red';
+
+    var fsDot = e.fixtureSchedule === 'Received'    ? 'dot-green'
+              : e.fixtureSchedule === 'Not Required' ? 'dot-gray'
+              : 'dot-yellow';
+
+    var smDot = e.socialMediaSpoc ? 'dot-green' : 'dot-gray';
+
+    var metaItems = [];
+    if (e.organizer) {
+      var orgText = esc(e.organizer) + (e.organizerPoc ? ' · <span style="font-weight:400">' + esc(e.organizerPoc) + '</span>' : '');
+      metaItems.push(iconMeta('org', orgText));
+    }
+    if (e.city) {
+      var cityText = esc(e.city) + (e.noOfCourts ? ' · ' + esc(e.noOfCourts) + ' courts' : '');
+      metaItems.push(iconMeta('pin', cityText));
+    }
+    if (e.startDate || e.endDate) {
+      var dateRange = e.startDate ? fmtDate(e.startDate) : '';
+      if (e.endDate) dateRange += (dateRange ? ' → ' : '') + fmtDate(e.endDate);
+      metaItems.push(iconMeta('cal', dateRange));
+    }
+
+    return '<div class="card">' +
+      '<div class="card-body">' +
+        '<div class="card-top">' +
+          '<div class="card-name">' + esc(e.eventName) + '</div>' +
+          badge +
+        '</div>' +
+        '<div class="card-meta">' + metaItems.join('') + '</div>' +
+      '</div>' +
+      '<div class="details-row">' +
+        '<div class="d-chip"><span class="dot ' + pdDot + '"></span>Players: ' + esc(e.playerDetailsReceived || 'No') + '</div>' +
+        '<div class="d-chip"><span class="dot ' + smDot + '"></span>SM: ' + esc(e.socialMediaSpoc || 'Not set') + '</div>' +
+        '<div class="d-chip"><span class="dot ' + fsDot + '"></span>Fixture: ' + esc(e.fixtureSchedule || 'Pending') + '</div>' +
+        (e.noOfRequests     ? '<div class="d-chip"><span class="dot dot-gray"></span>Req: '  + esc(e.noOfRequests)     + '</div>' : '') +
+        (e.noOfParticipants ? '<div class="d-chip"><span class="dot dot-green"></span>Part: ' + esc(e.noOfParticipants) + '</div>' : '') +
+      '</div>' +
+      '<div class="card-foot">' +
+        '<span class="badge ' + (PIPELINE_BADGE[e.pipeline] || 'pipe-upcoming') + '">' + esc(e.pipeline || 'Upcoming') + '</span>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-left:auto">' +
+          (e.brandings || e.notes ? '<span style="font-size:11px;color:var(--text-3);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(e.brandings || e.notes) + '</span>' : '') +
+          '<button class="btn-edit" onclick="openPanel(' + e.rowIndex + ')">Edit</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function iconMeta(type, text) {
+    var icons = {
+      org: '<svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>',
+      pin: '<svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>',
+      cal: '<svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>'
+    };
+    return '<div class="meta-item">' + icons[type] + text + '</div>';
+  }
+
+  function buildPipelinePills() {
+    var stages = ['Upcoming', 'In Talks', 'Deal Done', 'Completed', 'all'];
+    stages.forEach(function(s) {
+      var count = s === 'all' ? allEvents.length
+        : allEvents.filter(function(e) { return e.pipeline === s; }).length;
+      var el = document.getElementById('mpc-' + s);
+      if (el) el.textContent = count;
+    });
+  }
+
+  function setPipeline(val, btn) {
+    activePipeline = val;
+    document.querySelectorAll('.pipe-pill').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    filterCards();
+  }
+
+  function filterCards() {
+    var q = document.getElementById('search').value.toLowerCase();
+    var filtered = allEvents.filter(function(e) {
+      var matchPipeline = activePipeline === 'all' || e.pipeline === activePipeline;
+      var matchSearch   = !q || [e.eventName, e.organizer, e.city, e.venueName, e.partneredAs, e.notes, e.startDate, e.endDate]
+        .some(function(v) { return v && v.toLowerCase().indexOf(q) !== -1; });
+      return matchPipeline && matchSearch;
+    });
+    renderCards(filtered);
+  }
+
+  /* ── Panel ── */
+  function openPanel(rowIndex) {
+    editingRow = rowIndex || null;
+    clearForm();
+
+    if (rowIndex) {
+      document.getElementById('panel-title').textContent = 'Edit Event';
+      document.getElementById('btn-delete').style.display = 'inline-flex';
+      var ev = allEvents.find(function(e) { return e.rowIndex === rowIndex; });
+      if (ev) fillForm(ev);
+    } else {
+      document.getElementById('panel-title').textContent = 'Add Event';
+      document.getElementById('btn-delete').style.display = 'none';
+    }
+
+    document.getElementById('panel').classList.add('open');
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePanel() {
+    document.getElementById('panel').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    editingRow = null;
+  }
+
+  function clearForm() {
+    ['f-eventName','f-organizer','f-organizerPoc','f-organizerContact','f-venueName','f-city',
+     'f-noOfCourts','f-startDate','f-endDate','f-socialMediaSpoc','f-brandings','f-notes',
+     'f-partneredAs-other','f-noOfRequests','f-noOfParticipants']
+      .forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('f-pipeline').value = 'Upcoming';
+
+    ['f-partneredAs','f-playerDetailsReceived','f-fixtureSchedule']
+      .forEach(function(id) { document.getElementById(id).selectedIndex = 0; });
+
+    document.getElementById('f-partneredAs-other').classList.remove('show');
+    resetSaveBtn();
+  }
+
+  function fillForm(e) {
+    document.getElementById('f-eventName').value        = e.eventName        || '';
+    document.getElementById('f-organizer').value        = e.organizer        || '';
+    document.getElementById('f-organizerPoc').value     = e.organizerPoc     || '';
+    document.getElementById('f-organizerContact').value = e.organizerContact || '';
+    document.getElementById('f-venueName').value        = e.venueName        || '';
+    document.getElementById('f-city').value             = e.city             || '';
+    document.getElementById('f-noOfCourts').value       = e.noOfCourts       || '';
+    document.getElementById('f-pipeline').value           = e.pipeline         || 'Upcoming';
+    document.getElementById('f-startDate').value         = e.startDate        || '';
+    document.getElementById('f-endDate').value           = e.endDate          || '';
+    document.getElementById('f-socialMediaSpoc').value  = e.socialMediaSpoc  || '';
+    document.getElementById('f-brandings').value         = e.brandings         || '';
+    document.getElementById('f-notes').value             = e.notes             || '';
+    document.getElementById('f-noOfRequests').value      = e.noOfRequests      || '';
+    document.getElementById('f-noOfParticipants').value  = e.noOfParticipants  || '';
+
+    var paSelect = document.getElementById('f-partneredAs');
+    var paOther  = document.getElementById('f-partneredAs-other');
+    if (PARTNER_OPTIONS.indexOf(e.partneredAs) !== -1) {
+      paSelect.value = e.partneredAs;
+    } else if (e.partneredAs) {
+      paSelect.value = 'Other';
+      paOther.value  = e.partneredAs;
+      paOther.classList.add('show');
+    }
+
+    pickSelect('f-playerDetailsReceived', e.playerDetailsReceived);
+    pickSelect('f-fixtureSchedule', e.fixtureSchedule);
+  }
+
+  function pickSelect(id, val) {
+    var el = document.getElementById(id);
+    for (var i = 0; i < el.options.length; i++) {
+      if (el.options[i].value === val || el.options[i].text === val) {
+        el.selectedIndex = i; return;
+      }
+    }
+  }
+
+  function getFormData() {
+    var pa = document.getElementById('f-partneredAs').value;
+    if (pa === 'Other') pa = document.getElementById('f-partneredAs-other').value.trim();
+    return {
+      eventName:             document.getElementById('f-eventName').value.trim(),
+      organizer:             document.getElementById('f-organizer').value.trim(),
+      organizerPoc:          document.getElementById('f-organizerPoc').value.trim(),
+      organizerContact:      document.getElementById('f-organizerContact').value.trim(),
+      venueName:             document.getElementById('f-venueName').value.trim(),
+      city:                  document.getElementById('f-city').value.trim(),
+      noOfCourts:            document.getElementById('f-noOfCourts').value.trim(),
+      pipeline:              document.getElementById('f-pipeline').value,
+      startDate:             document.getElementById('f-startDate').value,
+      endDate:               document.getElementById('f-endDate').value,
+      partneredAs:           pa,
+      playerDetailsReceived: document.getElementById('f-playerDetailsReceived').value,
+      socialMediaSpoc:       document.getElementById('f-socialMediaSpoc').value.trim(),
+      fixtureSchedule:       document.getElementById('f-fixtureSchedule').value,
+      brandings:             document.getElementById('f-brandings').value.trim(),
+      notes:                 document.getElementById('f-notes').value.trim(),
+      noOfRequests:          document.getElementById('f-noOfRequests').value.trim(),
+      noOfParticipants:      document.getElementById('f-noOfParticipants').value.trim()
+    };
+  }
+
+  function saveEvent() {
+    var data = getFormData();
+    if (!data.eventName) { toast('Event name is required', 'err'); return; }
+
+    setSaving(true);
+
+    var fn   = editingRow ? 'updateEventFull' : 'addEvent';
+    var args = editingRow ? [editingRow, data] : [data];
+
+    google.script.run
+      .withSuccessHandler(function() {
+        toast(editingRow ? 'Event updated' : 'Event added', 'ok');
+        closePanel();
+        loadEvents();
+      })
+      .withFailureHandler(function(e) {
+        toast('Error: ' + e.message, 'err');
+        setSaving(false);
+      })
+      [fn].apply(google.script.run, args);
+  }
+
+  function confirmDelete() {
+    if (!editingRow) return;
+    if (!confirm('Delete this event? This cannot be undone.')) return;
+
+    google.script.run
+      .withSuccessHandler(function() {
+        toast('Event deleted');
+        closePanel();
+        loadEvents();
+      })
+      .withFailureHandler(function(e) { toast('Error: ' + e.message, 'err'); })
+      .deleteEvent(editingRow);
+  }
+
+  function toggleOther(selectId, otherId) {
+    var other = document.getElementById(otherId);
+    if (document.getElementById(selectId).value === 'Other') {
+      other.classList.add('show');
+      other.focus();
+    } else {
+      other.classList.remove('show');
+      other.value = '';
+    }
+  }
+
+  function setSaving(on) {
+    var btn = document.getElementById('btn-save');
+    btn.textContent = on ? 'Saving...' : 'Save';
+    btn.disabled    = on;
+  }
+
+  function resetSaveBtn() { setSaving(false); }
+
+  function toast(msg, type) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = 'toast' + (type ? ' ' + type : '');
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); }, 2800);
+  }
+
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var parts = iso.split('-');
+    if (parts.length !== 3) return iso;
+    return parseInt(parts[2], 10) + ' ' + MONTHS[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
+  }
+
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

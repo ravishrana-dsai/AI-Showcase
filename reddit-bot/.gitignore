@@ -1,0 +1,28 @@
+# Environment files with secrets
+.env
+
+# Generated data files
+processed_posts.json
+bot_stats.json
+bot_activity.log
+bot_analytics.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

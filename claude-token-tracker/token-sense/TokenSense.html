@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TokenSense — Project Summary & Competitive Landscape</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F5F0; --paper: #FFFFFF; --ink: #1A1814; --ink-mid: #4A4640;
+    --ink-light: #8A8680; --border: #E0DDD8; --border-dark: #C8C4BE;
+    --anthropic: #CC5500; --gemini: #1A73E8; --openai: #10A37F;
+    --accent: #2D6A4F; --tag: #F0EDE8; --warn: #B5451B; --purple: #7c3aed;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); font-family: 'DM Sans', system-ui, sans-serif; color: var(--ink); min-height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 2px; }
+  .serif { font-family: 'Libre Baskerville', Georgia, serif; }
+  .mono  { font-family: 'DM Mono', monospace; }
+
+  /* Nav */
+  .nav {
+    background: var(--paper); border-bottom: 1px solid var(--border);
+    padding: 13px 40px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-left { display: flex; align-items: center; gap: 16px; }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .nav-name { font-size: 14px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; }
+  .tab-bar { display: flex; background: var(--tag); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 2px; }
+  .tab-btn { background: transparent; color: var(--ink-mid); border: none; border-radius: 5px; padding: 5px 14px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', system-ui; font-weight: 500; transition: all 0.15s; }
+  .tab-btn.active { background: var(--ink); color: #fff; font-weight: 600; }
+
+  /* Layout */
+  .page { display: none; }
+  .page.active { display: block; }
+  .container { max-width: 900px; margin: 0 auto; padding: 48px 40px 80px; }
+  .container.wide { max-width: 1040px; }
+
+  /* Typography */
+  h1.hero { font-size: 46px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 24px; color: var(--ink); }
+  h1.page-title { font-size: 38px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; line-height: 1.15; letter-spacing: -1px; margin-bottom: 20px; }
+  h2.section-title { font-size: 22px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; margin-bottom: 8px; }
+  h3.card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+
+  /* Tags / pills */
+  .pill { font-size: 12px; padding: 5px 14px; border-radius: 6px; font-weight: 500; display: inline-block; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.15em; color: var(--ink-light); text-transform: uppercase; margin-bottom: 16px; }
+  .section-sub { font-size: 14px; color: var(--ink-light); margin-bottom: 20px; line-height: 1.6; }
+
+  /* Cards */
+  .card { background: var(--paper); border: 1.5px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .card-sm { background: var(--paper); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+
+  /* Grids */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+
+  /* Stat card */
+  .stat-card { background: var(--paper); border: 1.5px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .stat-label { font-size: 11px; color: var(--ink-light); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: -1px; }
+  .stat-sub { font-size: 12px; color: var(--ink-light); margin-top: 4px; }
+
+  /* Bar chart */
+  .bar-track { height: 6px; background: var(--tag); border-radius: 3px; overflow: hidden; margin: 4px 0; }
+  .bar-fill { height: 100%; border-radius: 3px; }
+
+  /* Hero section */
+  .hero-row { display: flex; gap: 48px; align-items: flex-start; margin-bottom: 56px; border-bottom: 1px solid var(--border); padding-bottom: 48px; }
+  .hero-left { flex: 1; min-width: 0; }
+  .hero-right { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+
+  /* Dark hero block */
+  .dark-card { background: var(--ink); border-radius: 14px; padding: 32px 36px; color: #fff; position: relative; overflow: hidden; margin-bottom: 52px; }
+  .dark-card h2 { font-size: 28px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; line-height: 1.2; margin-bottom: 12px; }
+  .dark-card p { font-size: 15px; color: rgba(255,255,255,0.72); line-height: 1.75; max-width: 560px; margin-bottom: 24px; }
+  .dark-glow-1 { position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: rgba(26,115,232,0.12); pointer-events: none; }
+  .dark-glow-2 { position: absolute; bottom: -60px; left: -20px; width: 160px; height: 160px; border-radius: 50%; background: rgba(45,106,79,0.15); pointer-events: none; }
+  .feat-card { background: rgba(255,255,255,0.07); border-radius: 10px; padding: 16px 18px; border: 1px solid rgba(255,255,255,0.1); }
+  .feat-icon { font-size: 20px; margin-bottom: 10px; }
+  .feat-title { font-size: 14px; font-weight: 700; margin-bottom: 7px; }
+  .feat-body { font-size: 13px; color: rgba(255,255,255,0.62); line-height: 1.7; }
+
+  /* Tracks table */
+  .tracks-table { background: var(--paper); border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .track-row { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .track-row:last-child { border-bottom: none; }
+  .track-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .track-category { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .track-desc { font-size: 13px; color: var(--ink-mid); line-height: 1.7; margin-bottom: 10px; }
+
+  /* Toggle */
+  .toggle-bar { display: flex; background: var(--paper); border: 1px solid var(--border); border-radius: 8px; padding: 3px; gap: 3px; }
+  .toggle-btn { background: transparent; color: var(--ink-mid); border: none; border-radius: 6px; padding: 5px 14px; font-size: 12px; cursor: pointer; font-family: 'DM Sans', system-ui; font-weight: 500; transition: all 0.15s; }
+  .toggle-btn.active { background: var(--ink); color: #fff; }
+  .toggle-content { display: none; }
+  .toggle-content.active { display: block; }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-row { display: flex; gap: 0; }
+  .tl-spine { display: flex; flex-direction: column; align-items: center; margin-right: 20px; flex-shrink: 0; }
+  .tl-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .tl-line { width: 1px; flex: 1; background: var(--border); margin: 6px 0; }
+  .tl-content { flex: 1; padding-bottom: 32px; }
+  .tl-actor { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .tl-title { font-size: 18px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; margin-bottom: 10px; color: var(--ink); }
+  .tl-body { font-size: 14px; color: var(--ink-mid); line-height: 1.75; margin-bottom: 12px; }
+  pre.code-block { background: var(--tag); border: 1px solid var(--border); border-radius: 7px; padding: 11px 14px; font-size: 11.5px; font-family: 'DM Mono', monospace; color: var(--ink-mid); line-height: 1.7; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+
+  /* Competitive table */
+  .comp-table-wrap { background: var(--paper); border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 860px; }
+  thead tr { background: var(--tag); border-bottom: 1.5px solid var(--border); }
+  th { padding: 12px 10px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink-light); letter-spacing: 0.06em; text-transform: uppercase; }
+  th.tool-col { text-align: left; padding-left: 16px; width: 150px; }
+  td { padding: 12px 10px; text-align: center; font-size: 15px; }
+  td.tool-cell { padding: 12px 16px; text-align: left; }
+  tr.ts-row { background: rgba(26,24,20,0.04); }
+  tr + tr { border-top: 1px solid var(--border); }
+
+  /* Diff card */
+  .diff-card { background: var(--paper); border: 1.5px solid var(--border); border-radius: 12px; padding: 22px 24px; margin-bottom: 14px; }
+  .diff-icon { font-size: 28px; flex-shrink: 0; margin-top: 2px; }
+  .diff-title { font-size: 16px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; margin-bottom: 10px; color: var(--ink); }
+  .diff-body { font-size: 14px; color: var(--ink-mid); line-height: 1.75; margin-bottom: 14px; }
+  .diff-vs { display: flex; gap: 10px; flex-wrap: wrap; }
+  .diff-box { padding: 10px 14px; border-radius: 8px; flex: 1; min-width: 200px; }
+  .diff-box-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+  .diff-box-body { font-size: 13px; color: var(--ink-mid); }
+
+  /* Positioning dark card */
+  .pos-card { background: var(--ink); border-radius: 14px; padding: 32px 36px; color: #fff; }
+  .pos-card h2 { font-size: 24px; font-weight: 700; font-family: 'Libre Baskerville', Georgia, serif; line-height: 1.3; margin-bottom: 16px; }
+  .pos-card p { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.8; max-width: 640px; margin-bottom: 24px; }
+  .pos-stat { background: rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.1); }
+  .pos-stat-label { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .pos-stat-value { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; margin-bottom: 4px; }
+  .pos-stat-sub { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5; white-space: pre-line; }
+
+  /* MVP scope */
+  .scope-row { background: var(--paper); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; gap: 14px; align-items: flex-start; margin-bottom: 8px; }
+  .scope-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+  .scope-badge { font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 600; margin-left: auto; flex-shrink: 0; }
+
+  /* Phase row */
+  .phase-row { background: var(--paper); border: 1.5px solid var(--border); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+
+  /* Flow diagram */
+  .flow-wrap { display: flex; align-items: center; overflow-x: auto; padding-bottom: 8px; }
+  .flow-node { padding: 12px 16px; border-radius: 8px; text-align: center; flex-shrink: 0; }
+  .flow-arrow { font-size: 16px; color: var(--ink-light); margin: 0 8px; flex-shrink: 0; }
+
+  /* Competitor profiles */
+  .profile-note { margin-top: 8px; font-size: 12px; line-height: 1.5; border-radius: 6px; padding: 6px 8px; }
+
+  section { margin-bottom: 48px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-left">
+    <div class="nav-logo">
+      <div class="nav-dot">TS</div>
+      <span class="nav-name">TokenSense</span>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('product')">Product Summary</button>
+      <button class="tab-btn" onclick="switchTab('landscape')">Competitive Landscape</button>
+    </div>
+  </div>
+  <span style="font-size:12px;color:var(--ink-light);">v1.0 MVP · March 2026</span>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════ PRODUCT SUMMARY -->
+<div id="tab-product" class="page active">
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero-row">
+    <div class="hero-left">
+      <div class="eyebrow">TokenSense v1.0 · MVP Summary</div>
+      <h1 class="hero">The Universal AI Cost<br>Intelligence Layer</h1>
+      <p style="font-size:17px;color:var(--ink-mid);line-height:1.8;font-style:italic;margin-bottom:32px;">
+        TokenSense intercepts LLM API calls across any provider — in production, during feature development, and across ML experiments. It measures cost and latency per feature, compares prompt and model iterations, flags inefficiencies, and gives you an AI Employee to act on all of it — in under 2 lines of code.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="pill" style="border:1px solid rgba(26,24,20,0.22);color:var(--ink);background:rgba(26,24,20,0.05);">Next.js 16</span>
+        <span class="pill" style="border:1px solid rgba(26,115,232,0.22);color:var(--gemini);background:rgba(26,115,232,0.05);">Gemini 2.0 Flash</span>
+        <span class="pill" style="border:1px solid rgba(74,70,64,0.22);color:var(--ink-mid);background:rgba(74,70,64,0.05);">SQLite</span>
+        <span class="pill" style="border:1px solid rgba(45,106,79,0.22);color:var(--accent);background:rgba(45,106,79,0.05);">TypeScript</span>
+        <span class="pill" style="border:1px solid rgba(204,85,0,0.22);color:var(--anthropic);background:rgba(204,85,0,0.05);">provider-agnostic</span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;">What's inside</div>
+      <!-- Dual AI Agent -->
+      <div class="card-sm">
+        <div style="font-size:11px;font-weight:700;color:var(--ink);margin-bottom:8px;">Dual AI Agent</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--gemini);flex-shrink:0;"></div>
+            <span style="font-size:12px;color:var(--ink-mid);">Gemini 2.0 Flash</span>
+            <span style="margin-left:auto;font-size:10px;color:var(--accent);background:rgba(45,106,79,0.12);padding:1px 6px;border-radius:4px;font-weight:600;">Live</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--anthropic);flex-shrink:0;"></div>
+            <span style="font-size:12px;color:var(--ink-mid);">Claude Sonnet</span>
+            <span style="margin-left:auto;font-size:10px;color:var(--ink-light);background:var(--tag);padding:1px 6px;border-radius:4px;font-weight:600;">Roadmap</span>
+          </div>
+        </div>
+      </div>
+      <!-- Provider Coverage -->
+      <div class="card-sm">
+        <div style="font-size:11px;font-weight:700;color:var(--ink);margin-bottom:10px;">Provider Coverage</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:12px;color:var(--ink-mid);">API providers</span>
+            <span class="mono" style="font-size:13px;font-weight:700;color:var(--ink);">4+</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:12px;color:var(--ink-mid);">Models in pricing</span>
+            <span class="mono" style="font-size:13px;font-weight:700;color:var(--accent);">16</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:12px;color:var(--ink-mid);">Auto-updated</span>
+            <span class="mono" style="font-size:13px;font-weight:700;color:var(--gemini);">Yes</span>
+          </div>
+        </div>
+      </div>
+      <!-- Mini stats -->
+      <div class="card-sm" style="display:flex;gap:0;">
+        <div style="flex:1;text-align:center;border-right:1px solid var(--border);padding:0 4px;">
+          <div class="mono" style="font-size:20px;font-weight:700;color:var(--ink);line-height:1;">5</div>
+          <div style="font-size:10px;color:var(--ink-light);margin-top:4px;">phases</div>
+        </div>
+        <div style="flex:1;text-align:center;border-right:1px solid var(--border);padding:0 4px;">
+          <div class="mono" style="font-size:20px;font-weight:700;color:var(--ink);line-height:1;">2</div>
+          <div style="font-size:10px;color:var(--ink-light);margin-top:4px;">lines</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:0 4px;">
+          <div class="mono" style="font-size:20px;font-weight:700;color:var(--ink);line-height:1;">∞</div>
+          <div style="font-size:10px;color:var(--ink-light);margin-top:4px;">providers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE PROBLEM -->
+  <section>
+    <h2 class="section-title">The Problem</h2>
+    <div class="grid-4" style="margin-top:16px;">
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--warn);">No visibility</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">LLM API bills are a single number. You can't see which feature, model, or call is driving spend.</div></div>
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--warn);">No attribution</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">When costs spike, there's no way to trace it to a specific product feature or team.</div></div>
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--warn);">No action</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">Even when you find a problem, there's no tool to tell you exactly how to fix it with a code snippet ready to copy.</div></div>
+      <div class="card"><div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--warn);">No dev-time feedback</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">Engineers experiment with prompts and models blind — no way to compare actual cost between iterations before shipping.</div></div>
+    </div>
+  </section>
+
+  <!-- AI EMPLOYEE -->
+  <div class="dark-card">
+    <div class="dark-glow-1"></div>
+    <div class="dark-glow-2"></div>
+    <div style="position:relative;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#1A73E8;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">TS</div>
+        <span style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.5);">Hero Feature</span>
+      </div>
+      <h2>Meet your AI Employee.</h2>
+      <p>Not a chatbot. Not a report. An AI that works across your entire stack — production monitoring, feature development, and ML experimentation. It reads your live spend data, flags every inefficiency, and delivers concrete recommendations to cut cost and improve latency — with copy-paste code. Instantly when you ask. Automatically on a schedule. And proactively the moment something goes wrong.</p>
+      <div class="grid-4">
+        <div class="feat-card"><div class="feat-icon">⚡</div><div class="feat-title">Instant recommendations</div><div class="feat-body">Ask anything and get a specific, actionable fix — lower latency, reduced cost, better caching — backed by your real call data.</div></div>
+        <div class="feat-card"><div class="feat-icon">🗓️</div><div class="feat-title">Scheduled recommendations</div><div class="feat-body">Every morning a digest surfaces new inefficiencies: which features regressed, which models to swap, estimated savings per fix.</div></div>
+        <div class="feat-card"><div class="feat-icon">🧪</div><div class="feat-title">Experiment compare</div><div class="feat-body">Ask 'which prompt version was cheapest?' or 'compare model A vs B for this feature' — backed by real run data, not estimates.</div></div>
+        <div class="feat-card"><div class="feat-icon">🔔</div><div class="feat-title">Threshold alerts</div><div class="feat-body">Costs or latency spiking in prod or in a dev run? The AI Employee detects it, explains the root cause, and pushes a fix.</div></div>
+      </div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:rgba(255,255,255,0.45);">Powered by</span>
+        <span style="font-size:12px;padding:3px 10px;border-radius:20px;background:rgba(26,115,232,0.22);color:#1A73E8;border:1px solid rgba(26,115,232,0.4);font-weight:600;">Gemini 2.0 Flash</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.3);">live in MVP</span>
+        <span style="font-size:12px;padding:3px 10px;border-radius:20px;background:rgba(204,85,0,0.22);color:#CC5500;border:1px solid rgba(204,85,0,0.4);font-weight:600;">Claude Sonnet</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.3);">roadmap</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT TOKENSENSE TRACKS -->
+  <section>
+    <h2 class="section-title">What TokenSense Tracks</h2>
+    <p class="section-sub">Tag any call with a feature, unit, or workflow ID. TokenSense aggregates cost across every dimension you care about.</p>
+    <div class="tracks-table">
+      <div id="tracks-rows"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <h2 class="section-title" style="margin-bottom:0;">How It Works</h2>
+      <div class="toggle-bar">
+        <button class="toggle-btn active" onclick="switchHow('mvp',this)">MVP (today)</button>
+        <button class="toggle-btn" onclick="switchHow('full',this)">Full product</button>
+      </div>
+    </div>
+    <div style="background:var(--paper);border:1.5px solid var(--border);border-radius:12px;padding:28px 24px;">
+      <!-- MVP -->
+      <div id="how-mvp" class="toggle-content active">
+        <div style="font-size:11px;color:var(--ink-light);font-family:'DM Mono',monospace;margin-bottom:16px;letter-spacing:0.06em;text-transform:uppercase;">Data flow · MVP</div>
+        <div class="flow-wrap">
+          <div class="flow-node" style="background:rgba(138,134,128,0.1);border:1.5px solid rgba(138,134,128,0.3);"><div style="font-size:12px;font-weight:700;color:var(--ink-light);">Your App</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">Any language</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(204,85,0,0.1);border:1.5px solid rgba(204,85,0,0.3);"><div style="font-size:12px;font-weight:700;color:var(--anthropic);">LLM API</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">Anthropic / Gemini</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(45,106,79,0.1);border:1.5px solid rgba(45,106,79,0.3);"><div style="font-size:12px;font-weight:700;color:var(--accent);">POST /api/ingest</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">manual fetch call</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(74,70,64,0.1);border:1.5px solid rgba(74,70,64,0.3);"><div style="font-size:12px;font-weight:700;color:var(--ink-mid);">SQLite</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">tokensense.db</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(26,115,232,0.1);border:1.5px solid rgba(26,115,232,0.3);"><div style="font-size:12px;font-weight:700;color:var(--gemini);">Dashboard</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">localhost:1010</div></div>
+        </div>
+        <div class="grid-3" style="margin-top:24px;">
+          <div style="padding:14px 16px;background:var(--bg);border-radius:8px;"><div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink-light);margin-bottom:6px;">Step 1</div><div style="font-size:14px;font-weight:700;margin-bottom:7px;">Make your LLM call</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">Your app calls Anthropic or Gemini as normal. No SDK, no wrapper — nothing changes in how you talk to the API.</div></div>
+          <div style="padding:14px 16px;background:var(--bg);border-radius:8px;"><div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink-light);margin-bottom:6px;">Step 2</div><div style="font-size:14px;font-weight:700;margin-bottom:7px;">Fire a manual fetch</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">After each call, post a lightweight payload to POST /api/ingest with the model, tokens, feature tag, and unit ID. Fire-and-forget — one line, no await.</div></div>
+          <div style="padding:14px 16px;background:var(--bg);border-radius:8px;"><div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--ink-light);margin-bottom:6px;">Step 3</div><div style="font-size:14px;font-weight:700;margin-bottom:7px;">Visualise + act</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">Cost by feature, by provider, and by match appears in the dashboard instantly. Ask the AI Employee to audit, explain a flag, or generate a fix.</div></div>
+        </div>
+      </div>
+      <!-- Full product -->
+      <div id="how-full" class="toggle-content">
+        <div style="font-size:11px;color:var(--ink-light);font-family:'DM Mono',monospace;margin-bottom:16px;letter-spacing:0.06em;text-transform:uppercase;">Data flow · Full product</div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:var(--ink-light);margin-bottom:8px;letter-spacing:0.05em;text-transform:uppercase;">Ingestion path</div>
+          <div class="flow-wrap">
+            <div class="flow-node" style="background:rgba(138,134,128,0.1);border:1.5px solid rgba(138,134,128,0.3);"><div style="font-size:11px;font-weight:700;color:var(--ink-light);">Your App</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">Any language</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(26,24,20,0.08);border:1.5px solid rgba(26,24,20,0.2);"><div style="font-size:11px;font-weight:700;color:var(--ink);">TokenSense SDK</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">npm / pip · 2 lines</div></div>
+            <div class="flow-arrow">→</div>
+            <div style="font-size:13px;color:var(--ink-light);margin:0 6px;">⎡</div>
+            <div class="flow-node" style="background:rgba(204,85,0,0.1);border:1.5px solid rgba(204,85,0,0.3);"><div style="font-size:11px;font-weight:700;color:var(--anthropic);">Anthropic API</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">Claude</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(26,115,232,0.1);border:1.5px solid rgba(26,115,232,0.3);"><div style="font-size:11px;font-weight:700;color:var(--gemini);">Gemini API</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">Flash / Pro</div></div>
+            <div style="font-size:13px;color:var(--ink-light);margin:0 6px;">⎦</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(45,106,79,0.1);border:1.5px solid rgba(45,106,79,0.3);"><div style="font-size:11px;font-weight:700;color:var(--accent);">Ingest API</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">async · non-blocking</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(74,70,64,0.1);border:1.5px solid rgba(74,70,64,0.3);"><div style="font-size:11px;font-weight:700;color:var(--ink-mid);">ClickHouse</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">time-series · billions</div></div>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <div style="font-size:10px;color:var(--ink-light);margin-bottom:8px;letter-spacing:0.05em;text-transform:uppercase;">Intelligence path</div>
+          <div class="flow-wrap">
+            <div class="flow-node" style="background:rgba(74,70,64,0.1);border:1.5px solid rgba(74,70,64,0.3);"><div style="font-size:11px;font-weight:700;color:var(--ink-mid);">ClickHouse</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">aggregation queries</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(45,106,79,0.1);border:1.5px solid rgba(45,106,79,0.3);"><div style="font-size:11px;font-weight:700;color:var(--accent);">Dashboard API</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">GET /api/calls</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(26,115,232,0.1);border:1.5px solid rgba(26,115,232,0.3);"><div style="font-size:11px;font-weight:700;color:var(--gemini);">Dashboard</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">cost · flags · $/match</div></div>
+            <div class="flow-arrow">→</div>
+            <div style="font-size:13px;color:var(--ink-light);margin:0 6px;">⎡</div>
+            <div class="flow-node" style="background:rgba(26,115,232,0.1);border:1.5px solid rgba(26,115,232,0.3);"><div style="font-size:11px;font-weight:700;color:var(--gemini);">Agent (Gemini)</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">2.0 Flash · streaming</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(204,85,0,0.1);border:1.5px solid rgba(204,85,0,0.3);"><div style="font-size:11px;font-weight:700;color:var(--anthropic);">Agent (Claude)</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">Sonnet · deep reasoning</div></div>
+            <div style="font-size:13px;color:var(--ink-light);margin:0 6px;">⎦</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node" style="background:rgba(181,69,27,0.1);border:1.5px solid rgba(181,69,27,0.3);"><div style="font-size:11px;font-weight:700;color:var(--warn);">Alerts</div><div style="font-size:10px;color:var(--ink-light);margin-top:2px;">Slack · threshold · cron</div></div>
+          </div>
+        </div>
+        <div class="grid-3" style="margin-top:24px;">
+          <div style="padding:14px 16px;background:var(--bg);border-radius:8px;"><div style="font-size:14px;font-weight:700;margin-bottom:7px;">Any provider</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">The SDK wraps Anthropic, Gemini, OpenAI, and Cohere through a single unified interface.</div></div>
+          <div style="padding:14px 16px;background:var(--bg);border-radius:8px;"><div style="font-size:14px;font-weight:700;margin-bottom:7px;">Zero latency impact</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">Telemetry is always fire-and-forget — batched in memory, flushed async every 2s. Your app never slows down.</div></div>
+          <div style="padding:14px 16px;background:var(--bg);border-radius:8px;"><div style="font-size:14px;font-weight:700;margin-bottom:7px;">Dual-model AI Employee</div><div style="font-size:13px;color:var(--ink-mid);line-height:1.7;">Gemini Flash for instant recommendations, Claude Sonnet for deeper analysis. Both on demand or scheduled.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MVP SCOPE -->
+  <section>
+    <h2 class="section-title">MVP Scope</h2>
+    <p class="section-sub">What is built and running today vs. what comes next.</p>
+    <div id="mvp-scope"></div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section>
+    <h2 class="section-title">Tech Stack</h2>
+    <div style="background:var(--paper);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">
+      <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);"><div style="width:110px;font-size:12px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.07em;">Framework</div><div class="mono" style="font-size:14px;color:var(--ink);font-weight:500;">Next.js 16 (App Router)</div></div>
+      <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);"><div style="width:110px;font-size:12px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.07em;">Database</div><div class="mono" style="font-size:14px;color:var(--ink-mid);font-weight:500;">SQLite via better-sqlite3</div></div>
+      <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);"><div style="width:110px;font-size:12px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.07em;">Agent</div><div class="mono" style="font-size:14px;color:var(--gemini);font-weight:500;">Gemini 2.0 Flash (streaming)</div></div>
+      <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);"><div style="width:110px;font-size:12px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.07em;">Styling</div><div class="mono" style="font-size:14px;color:var(--accent);font-weight:500;">Inline CSS + DM Sans / DM Mono</div></div>
+      <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);"><div style="width:110px;font-size:12px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.07em;">Deploy</div><div class="mono" style="font-size:14px;color:var(--anthropic);font-weight:500;">Vercel + Turso (swap path)</div></div>
+      <div style="display:flex;align-items:center;padding:14px 20px;"><div style="width:110px;font-size:12px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.07em;">Language</div><div class="mono" style="font-size:14px;color:var(--ink-light);font-weight:500;">TypeScript throughout</div></div>
+    </div>
+  </section>
+
+  <!-- 5-PHASE ROADMAP -->
+  <section>
+    <h2 class="section-title">5-Phase Roadmap</h2>
+    <div id="phases-list"></div>
+  </section>
+
+  <!-- INTEGRATION -->
+  <section>
+    <h2 class="section-title">Integration</h2>
+    <div style="background:var(--paper);border:1.5px solid var(--border);border-radius:12px;padding:24px;">
+      <div style="font-size:13px;color:var(--ink-light);margin-bottom:12px;">Today: one manual fetch after each LLM call. After SDK ships: 2 lines total, fully automatic.</div>
+      <pre class="code-block">// TODAY (MVP) — add after any LLM call, fire and forget
+const start = Date.now();
+const response = await gemini.generateContent({ ... });
+
+fetch("http://localhost:1010/api/ingest", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ calls: [{
+    projectId: "dream-play",
+    feature:   "game_analysis",
+    provider:  "gemini",
+    model:     "gemini-2.0-flash",
+    inputTokens:  response.usageMetadata.promptTokenCount,
+    outputTokens: response.usageMetadata.candidatesTokenCount,
+    latencyMs: Date.now() - start,
+    unitId:    matchId,
+  }]}),
+}).catch(() => {}); // never blocks your app
+
+// AFTER SDK SHIPS — replaces everything above
+import { TokenSense } from "tokensense";
+const gemini = TokenSense.wrap(new GoogleGenerativeAI(key), {
+  apiKey: "ts_live_...", project: "dream-play"
+});</pre>
+      <div class="grid-2" style="margin-top:16px;">
+        <div style="padding:12px 14px;background:var(--bg);border-radius:8px;"><div style="font-size:12px;font-weight:700;color:var(--ink-mid);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em;">Today (MVP)</div><div style="font-size:13px;color:var(--ink-light);line-height:1.65;">One manual fetch after each LLM call. Paste it once per call site, fire-and-forget. Data appears in the dashboard within seconds.</div></div>
+        <div style="padding:12px 14px;background:var(--bg);border-radius:8px;"><div style="font-size:12px;font-weight:700;color:var(--ink-mid);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.07em;">After SDK</div><div style="font-size:13px;color:var(--ink-light);line-height:1.65;">npm install tokensense → wrap client → every call tracked automatically. The manual fetch code above is deleted entirely.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FULL PRODUCT TIMELINE -->
+  <section>
+    <h2 class="section-title" style="margin-bottom:8px;">How It Works — Full Product</h2>
+    <p class="section-sub">When all five phases are live, this is the complete end-to-end experience.</p>
+    <div class="timeline" id="timeline"></div>
+    <div style="margin-top:40px;padding:22px 24px;background:var(--paper);border:1.5px solid var(--border);border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:5px;">Steps 03–05 are live in this MVP.</div>
+        <div style="font-size:14px;color:var(--ink-light);">SDK (01–02) and alerts (06) are Phase 1 and Phase 5 of the roadmap.</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /container -->
+</div><!-- /tab-product -->
+
+
+<!-- ══════════════════════════════════════════════ COMPETITIVE LANDSCAPE -->
+<div id="tab-landscape" class="page">
+<div class="container wide">
+
+  <!-- Header -->
+  <div style="margin-bottom:40px;border-bottom:1px solid var(--border);padding-bottom:36px;">
+    <div class="eyebrow">Competitive Analysis · March 2026</div>
+    <h1 class="page-title">The landscape is full of dashboards.<br>TokenSense is the one that acts.</h1>
+    <p style="font-size:16px;color:var(--ink-mid);line-height:1.8;max-width:680px;">Six tools cover LLM observability in 2026. They all show you what happened. TokenSense is the only one that tells you what to do about it — with an AI that reads your live data, returns copy-paste code, and checks in every morning without being asked.</p>
+  </div>
+
+  <!-- Feature matrix -->
+  <section>
+    <h2 class="section-title">Feature matrix</h2>
+    <p class="section-sub">Based on publicly documented capabilities as of March 2026.</p>
+    <div class="comp-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="tool-col">Tool</th>
+            <th>Cost by feature</th>
+            <th>Unit economics ($/match)</th>
+            <th>No proxy required</th>
+            <th>AI agent on data</th>
+            <th>Code fix recs</th>
+            <th>Scheduled digest</th>
+            <th>Dev &amp; ML experiments</th>
+            <th>Self-hostable</th>
+          </tr>
+        </thead>
+        <tbody id="comp-table-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Competitor profiles -->
+  <section>
+    <h2 class="section-title">Competitor profiles</h2>
+    <div class="grid-3" id="profiles-grid"></div>
+  </section>
+
+  <!-- Where we differ -->
+  <section>
+    <h2 class="section-title">Where we differ</h2>
+    <p class="section-sub">Five gaps in the existing market that TokenSense specifically addresses.</p>
+    <div id="diff-list"></div>
+  </section>
+
+  <!-- Positioning -->
+  <section>
+    <div class="pos-card">
+      <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:16px;">Positioning</div>
+      <h2>The existing category is observability.<br>TokenSense is optimization intelligence.</h2>
+      <p>Observability tools answer "what happened?" TokenSense answers "what do you do about it?" — with an AI that audits your spend, returns code, tracks your unit economics per business unit, and checks in automatically every morning. The existing tools are monitors. TokenSense is an employee.</p>
+      <div class="grid-3">
+        <div class="pos-stat"><div class="pos-stat-label">Competitors</div><div class="pos-stat-value">7 tools</div><div class="pos-stat-sub">Helicone, Langfuse, LangSmith,<br>Portkey, Tokenr, Costrace, OpenMeter</div></div>
+        <div class="pos-stat"><div class="pos-stat-label">Features none of them have</div><div class="pos-stat-value">4 unique</div><div class="pos-stat-sub">AI agent with code, unit economics,<br>scheduled recs, cost projection at scale</div></div>
+        <div class="pos-stat"><div class="pos-stat-label">Closest to us</div><div class="pos-stat-value">Helicone</div><div class="pos-stat-sub">Best analytics of the group, but<br>still dashboard-only, proxy-based</div></div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /container -->
+</div><!-- /tab-landscape -->
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+const TRACKS = [
+  { category:"By feature", color:"#2D6A4F", example:"feature: 'game_analysis'", desc:"Which product feature is costing the most? See spend, call count, avg cost/call, and flags per feature — across all providers and models.", tags:["game_analysis","coaching_insights","match_prediction","commentary_gen"] },
+  { category:"By unit ($/match, $/user, $/report)", color:"#CC5500", example:"unitId: matchId", desc:"Tag calls with a business unit — a match ID, user ID, or job ID. TokenSense computes the total AI cost per unit so you know your exact unit economics.", tags:["match_4821 → $0.0043","match_3309 → $0.0061","user_9912 → $0.12/mo"] },
+  { category:"By workflow / agent chain", color:"#1A73E8", example:"feature: 'onboarding_flow'", desc:"Multi-step agent workflows span many calls. Tag each step with the same workflow ID to see the total cost of the full chain — not just individual calls.", tags:["onboarding_flow","data_pipeline","nightly_digest","match_recap"] },
+  { category:"By app / team", color:"#4A4640", example:"projectId: 'dream-play'", desc:"Multiple apps or teams share one dashboard. Each project gets its own view, its own API key, and its own agent context. Compare spend across products.", tags:["dream-play","dream11","fancode","internal-tools"] },
+  { category:"By model & provider", color:"#1A1814", example:"provider: 'gemini', model: 'gemini-2.0-flash'", desc:"See exactly how much each model costs you across all features. Identify where you're over-modelling (using Opus for tasks that only need Flash).", tags:["gemini-2.0-flash","claude-sonnet-4","gpt-4o-mini","gemini-1.5-pro"] },
+  { category:"Dev & ML experiments", color:"#7c3aed", example:"environment: 'experiment', experimentId: 'prompt_v3_vs_v4'", desc:"Not just for production. Tag calls with an experiment ID while building new features, tuning prompts, or evaluating models. Compare the real cost of each iteration — before it ships.", tags:["prompt_v3_vs_v4","model_eval_q1","company_new_feature","ml_pipeline_test"] },
+];
+
+const MVP_FEATURES = [
+  { done:true,  title:"Live ingestion API",               detail:"POST /api/ingest accepts batched TSCall payloads, enriches with computed cost and optimization flags, writes to SQLite." },
+  { done:true,  title:"Cost dashboard",                   detail:"Real-time overview: total spend, cost by feature, cost by provider, models in use, and flagged calls — auto-refreshes every 30s." },
+  { done:true,  title:"Gemini 2.0 Flash AI Employee",     detail:"Streaming chat with live project data injected into every prompt. Knows your actual spend, top features, and flags." },
+  { done:true,  title:"Pricing engine",                   detail:"16-model pricing table covering Anthropic, OpenAI, Gemini, and Cohere. Computes cost per call from token counts." },
+  { done:true,  title:"Flag detection",                   detail:"Rule-based flags on every call: static_prompt_not_cached, overmodeled, should_batch, use_flash_instead." },
+  { done:true,  title:"Seed data",                        detail:"One-click seed populates 200 realistic calls across 5 features and 5 models so the dashboard is never empty." },
+  { done:false, title:"TokenSense SDK (npm + pip)",        detail:"2-line wrapper around any LLM client. Fire-and-forget telemetry emitter. Phase 1 of the full roadmap." },
+  { done:false, title:"Anthropic AI Employee toggle",      detail:"Claude Sonnet as a second AI Employee backend. Switch mid-session to compare reasoning quality vs. cost." },
+  { done:false, title:"ClickHouse migration",              detail:"Swap SQLite for ClickHouse Cloud when scale demands sub-second aggregations over billions of rows." },
+];
+
+const PHASES = [
+  { num:"01", title:"Universal SDK",         detail:"npm + pip wrapper. 2-line integration.",          duration:"Week 1–2",  color:"#1A1814", done:false },
+  { num:"02", title:"Ingestion API",         detail:"POST endpoint, ClickHouse, aggregation queries.", duration:"Week 2–3",  color:"#4A4640", done:true  },
+  { num:"03", title:"Dual-Model AI Employee",detail:"Anthropic + Gemini backends, provider toggle.",   duration:"Week 3–4",  color:"#CC5500", done:true  },
+  { num:"04", title:"Dashboard",             detail:"Live data, provider breakdown, $/match tracking.",duration:"Week 4–5",  color:"#2D6A4F", done:true  },
+  { num:"05", title:"Productize",            detail:"npm publish, self-serve onboarding, pricing.",    duration:"Month 2–3", color:"#1A73E8", done:false },
+];
+
+const TIMELINE = [
+  { num:"01", actor:"Developer", color:"#1A1814", title:"Install the SDK and wrap your client", body:"One npm install and two lines of code. The SDK wraps your existing Anthropic, Gemini, or OpenAI client using a JavaScript Proxy — your app code changes nothing else. Every subsequent call is intercepted automatically.", code:`import { TokenSense } from "tokensense";\nconst client = TokenSense.wrap(new Anthropic(), { apiKey: "ts_live_...", project: "dream-play" });` },
+  { num:"02", actor:"SDK", color:"#4A4640", title:"Intercept, measure, and emit — non-blocking", body:"The wrapper captures input/output token counts, model, latency, and your custom feature and unit tags. It forwards the original call to the provider at full speed, then queues a lightweight telemetry payload in memory and flushes it to the ingestion API every 2 seconds in the background.", code:`// Zero latency added to your critical path\ntelemetryQueue.push(payload);\nif (queue.length >= 50) flushQueue(); // fire-and-forget` },
+  { num:"03", actor:"Ingestion API", color:"#2D6A4F", title:"Receive, enrich, and store every call", body:"The ingestion endpoint receives batched payloads, runs rule-based flag detection (static_prompt_not_cached, overmodeled, should_batch), computes exact cost from the pricing table, and writes to ClickHouse.", code:`POST /v1/batch → validate → detectFlags() → computeCost() → ClickHouse.insert()` },
+  { num:"04", actor:"Dashboard", color:"#1A73E8", title:"See cost by feature, provider, and match — live", body:"The dashboard auto-refreshes every 30 seconds. You see total spend, a breakdown by feature, which provider each dollar went to, and cost per match. Every flagged call is surfaced in the calls table with the specific issue.", code:`SELECT unit_id, sum(cost_usd) FROM api_calls GROUP BY unit_id;` },
+  { num:"05", actor:"Agent", color:"#CC5500", title:"Ask the agent to audit, explain, and fix", body:"The optimization agent receives your live project data injected into its system prompt. Ask it to audit your costs and it returns the top 3 savings opportunities with exact dollar estimates and copy-paste-ready code.", code:`You: "Audit my costs"\nAgent: "1. game_analysis: enable prompt caching → saves ~$0.20/day (60%)\n        2. match_prediction: switch gemini-1.5-pro → flash → saves ~$0.14/day"` },
+  { num:"06", actor:"Alerts", color:"#B5451B", title:"Threshold alerts and scheduled digests fire automatically", body:"A 9am daily digest surfaces new issues. A threshold trigger fires when cost-per-match crosses your set limit — the agent auto-generates an explanation and a recommended fix, delivered to Slack.", code:`if (avgCostPerMatch > LIMIT) {\n  await agent.audit(project); // → Slack digest\n}` },
+];
+
+const COMPETITORS = [
+  { name:"Helicone",    tier:"Observability",  tagline:"Best analytics & semantic caching",   pricing:"$20/mo (50K req free)",         setup:"Proxy — change base URL",           f:[1,0,0,0,0,0,0,1], color:"#FF6B6B" },
+  { name:"Langfuse",    tier:"Observability",  tagline:"Open-source, self-hosted",             pricing:"Free (self-hosted) / $29/mo",    setup:"SDK — manual instrumentation",       f:[1,0,1,0,0,0,1,1], color:"#4ECDC4" },
+  { name:"LangSmith",   tier:"Observability",  tagline:"LangChain-native tracing",             pricing:"$39/mo",                         setup:"LangChain only (auto) or manual",    f:[1,0,1,0,0,0,1,0], color:"#A8DADC" },
+  { name:"Portkey",     tier:"Gateway",        tagline:"AI gateway, 250+ models",              pricing:"$49/mo",                         setup:"Proxy — route all traffic",          f:[1,0,0,0,0,0,0,1], color:"#FFB347" },
+  { name:"Tokenr",      tier:"Cost tracking",  tagline:"Attribution by feature/team",          pricing:"Freemium",                       setup:"SDK — auto-patch",                   f:[1,0,1,0,0,0,0,0], color:"#C3B1E1" },
+  { name:"Costrace",    tier:"Cost tracking",  tagline:"2-line setup, real-time cost",         pricing:"Free / $19/mo",                  setup:"SDK — 2 lines",                     f:[0,0,1,0,0,0,0,0], color:"#B5EAD7" },
+  { name:"OpenMeter",   tier:"Billing infra",  tagline:"Meter usage to bill your customers",   pricing:"Free / usage-based (now Kong)",  setup:"CloudEvents SDK + Kafka pipeline",   f:[0,0,1,0,0,0,0,1], color:"#6C8EBF", note:"Outward-facing: bills your customers for their AI usage. Not inward-facing cost intelligence." },
+  { name:"TokenSense",  tier:"Intelligence",   tagline:"Observe + act, not just watch",        pricing:"Free (MVP) / $49/mo (Pro)",      setup:"Fire-and-forget fetch, no proxy",    f:[1,1,1,1,1,1,1,1], color:"#1A1814", isUs:true },
+];
+
+const DIFFERENTIATORS = [
+  { icon:"🤖", title:"Everyone shows a dashboard. Nobody acts on it.", body:"Every existing tool — Helicone, Langfuse, LangSmith, Portkey — shows you charts. The insight stops there. TokenSense goes further: an AI Employee reads your live data, audits it, and returns specific fixes with copy-paste code. The jump from observation to action is what none of them make.", competitors:"Helicone, Langfuse, LangSmith, Portkey, Tokenr, Costrace", compNote:"All show dashboards", tsNote:"AI Employee returns actionable code", color:"#1A1814" },
+  { icon:"📐", title:"Unit economics is a completely missing concept.", body:"Every tool tracks cost per API key, per user, or per feature. None of them track the cost per business unit — what does one match cost us in AI? For products for products where the core product unit is a match, this metric is the only one that matters for pricing decisions.", competitors:"All 7 competitors", compNote:"No $/unit concept", tsNote:"First-class $/match, $/user, $/report tracking", color:"#CC5500" },
+  { icon:"🔌", title:"Default integration is a proxy sitting between you and your provider.", body:"Helicone and Portkey's primary integration routes all LLM traffic through their proxy servers. Both offer self-hosting to mitigate this, but the core architecture still intercepts your calls. TokenSense uses a fundamentally different model: your app calls Gemini or Anthropic directly at full speed, and telemetry is queued and flushed in the background.", competitors:"Helicone, Portkey", compNote:"Proxy-first architecture (self-host available)", tsNote:"Direct provider calls, async fire-and-forget telemetry", color:"#1A73E8" },
+  { icon:"🗓️", title:"Recommendations that ship on a schedule, not just when you ask.", body:"Every tool is reactive — you open a dashboard when something feels expensive. TokenSense is the only platform with a scheduled intelligence loop: a daily 9am digest that surfaces new regressions and savings opportunities you didn't think to look for. Plus threshold alerts that fire the moment cost-per-match crosses your limit.", competitors:"All 7 competitors", compNote:"Manual dashboard review only", tsNote:"Scheduled digest + threshold triggers", color:"#2D6A4F" },
+  { icon:"🧪", title:"Experiment cost comparison exists — but only in the expensive tiers.", body:"Langfuse and LangSmith both support prompt versioning and can show cost per experiment run — credit where it's due. But this is buried in their evaluation workflows and requires their full tracing SDK. TokenSense makes it a first-class concept: tag any call with experimentId, compare real cost and latency of v1 vs v2, and project the difference at 10K calls/day.", competitors:"Langfuse, LangSmith (partial)", compNote:"Have prompt versioning + cost per run (via eval workflows)", tsNote:"First-class experimentId tag + projected cost at scale", color:"#7c3aed" },
+];
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+
+// Tracks
+const tracksEl = document.getElementById('tracks-rows');
+TRACKS.forEach((t, i) => {
+  tracksEl.innerHTML += `
+    <div class="track-row" ${i === TRACKS.length-1 ? 'style="border-bottom:none"' : ''}>
+      <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div class="track-dot" style="background:${t.color};"></div>
+            <span class="track-category">${t.category}</span>
+          </div>
+          <p class="track-desc">${t.desc}</p>
+          <code style="font-size:12px;font-family:'DM Mono',monospace;background:var(--tag);padding:3px 8px;border-radius:4px;color:${t.color};">${t.example}</code>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;padding-top:2px;">
+          ${t.tags.map(tag => `<span style="font-size:12px;padding:4px 10px;border-radius:20px;background:${t.color}15;color:${t.color};border:1px solid ${t.color}25;font-weight:500;white-space:nowrap;">${tag}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+});
+
+// MVP scope
+const scopeEl = document.getElementById('mvp-scope');
+MVP_FEATURES.forEach(f => {
+  scopeEl.innerHTML += `
+    <div class="scope-row" style="opacity:${f.done?1:0.65};">
+      <div class="scope-icon" style="background:${f.done?'#2D6A4F':'var(--tag)'};border:1.5px solid ${f.done?'#2D6A4F':'var(--border-dark)'};color:${f.done?'#fff':'var(--ink-light)'};">${f.done?'✓':'·'}</div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:${f.done?'var(--ink)':'var(--ink-mid)'};">${f.title}</div>
+        <div style="font-size:13px;color:var(--ink-light);line-height:1.65;">${f.detail}</div>
+      </div>
+      <span class="scope-badge" style="background:${f.done?'rgba(45,106,79,0.12)':'var(--tag)'};color:${f.done?'#2D6A4F':'var(--ink-light)'};">${f.done?'Live':'Roadmap'}</span>
+    </div>`;
+});
+
+// Phases
+const phasesEl = document.getElementById('phases-list');
+PHASES.forEach(p => {
+  phasesEl.innerHTML += `
+    <div class="phase-row" style="border-color:${p.done?p.color+'40':'var(--border)'};">
+      <div class="mono" style="font-size:13px;color:${p.color};font-weight:500;width:28px;flex-shrink:0;">${p.num}</div>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">${p.title}</div>
+        <div style="font-size:13px;color:var(--ink-light);">${p.detail}</div>
+      </div>
+      <div class="mono" style="font-size:11px;color:var(--ink-light);flex-shrink:0;">${p.duration}</div>
+      <span style="font-size:11px;padding:2px 9px;border-radius:20px;background:${p.done?p.color+'15':'var(--tag)'};color:${p.done?p.color:'var(--ink-light)'};font-weight:600;border:1px solid ${p.done?p.color+'30':'var(--border)'};">${p.done?'Built':'Upcoming'}</span>
+    </div>`;
+});
+
+// Timeline
+const tlEl = document.getElementById('timeline');
+TIMELINE.forEach((s, i) => {
+  tlEl.innerHTML += `
+    <div class="tl-row">
+      <div class="tl-spine">
+        <div class="tl-dot" style="background:${s.color};">${s.num}</div>
+        ${i < TIMELINE.length-1 ? '<div class="tl-line"></div>' : ''}
+      </div>
+      <div class="tl-content" ${i === TIMELINE.length-1 ? 'style="padding-bottom:0"' : ''}>
+        <div class="tl-actor" style="color:${s.color};">${s.actor}</div>
+        <div class="tl-title">${s.title}</div>
+        <p class="tl-body">${s.body}</p>
+        <pre class="code-block">${s.code}</pre>
+      </div>
+    </div>`;
+});
+
+// Competitive table
+const tableBody = document.getElementById('comp-table-body');
+COMPETITORS.forEach(c => {
+  const cells = c.f.map(v => `<td>${v ? `<span style="color:${c.isUs?'#2D6A4F':'#4A4640'};font-size:16px;">✓</span>` : '<span style="color:#E0DDD8;font-size:14px;">—</span>'}</td>`).join('');
+  tableBody.innerHTML += `
+    <tr class="${c.isUs?'ts-row':''}">
+      <td class="tool-cell">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${c.color};flex-shrink:0;"></div>
+          <div>
+            <div style="font-size:13px;font-weight:${c.isUs?700:600};color:${c.isUs?'var(--ink)':'var(--ink-mid)'};">${c.name}${c.isUs?' <span style="font-size:10px;color:#2D6A4F;background:rgba(45,106,79,0.12);padding:1px 5px;border-radius:4px;font-weight:700;">us</span>':''}</div>
+            <div style="font-size:11px;color:var(--ink-light);">${c.tier}</div>
+          </div>
+        </div>
+      </td>
+      ${cells}
+    </tr>`;
+});
+
+// Competitor profiles
+const profilesEl = document.getElementById('profiles-grid');
+COMPETITORS.filter(c => !c.isUs).forEach(c => {
+  profilesEl.innerHTML += `
+    <div class="card-sm" style="border-color:${c.note?'rgba(26,115,232,0.3)':'var(--border)'};">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:${c.color};"></div>
+        <span style="font-size:14px;font-weight:700;">${c.name}</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--ink-light);background:var(--tag);padding:1px 7px;border-radius:4px;">${c.tier}</span>
+      </div>
+      <div style="font-size:13px;color:var(--ink-mid);font-style:italic;margin-bottom:10px;">${c.tagline}</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;gap:8px;"><span style="font-size:11px;color:var(--ink-light);width:44px;flex-shrink:0;">Price</span><span class="mono" style="font-size:12px;color:var(--ink-mid);">${c.pricing}</span></div>
+        <div style="display:flex;gap:8px;"><span style="font-size:11px;color:var(--ink-light);width:44px;flex-shrink:0;">Setup</span><span style="font-size:12px;color:var(--ink-mid);">${c.setup}</span></div>
+      </div>
+      ${c.note ? `<div class="profile-note" style="background:rgba(26,115,232,0.06);border:1px solid rgba(26,115,232,0.2);color:#1A73E8;">${c.note}</div>` : ''}
+    </div>`;
+});
+
+// Differentiators
+const diffEl = document.getElementById('diff-list');
+DIFFERENTIATORS.forEach(d => {
+  diffEl.innerHTML += `
+    <div class="diff-card">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div class="diff-icon">${d.icon}</div>
+        <div style="flex:1;">
+          <div class="diff-title">${d.title}</div>
+          <p class="diff-body">${d.body}</p>
+          <div class="diff-vs">
+            <div class="diff-box" style="background:rgba(181,69,27,0.06);border:1px solid rgba(181,69,27,0.18);">
+              <div class="diff-box-label" style="color:var(--warn);">${d.competitors}</div>
+              <div class="diff-box-body">${d.compNote}</div>
+            </div>
+            <div class="diff-box" style="background:rgba(45,106,79,0.06);border:1px solid rgba(45,106,79,0.2);">
+              <div class="diff-box-label" style="color:var(--accent);">TokenSense</div>
+              <div class="diff-box-body">${d.tsNote}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+});
+
+// ─── Interactions ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function switchHow(view, btn) {
+  document.querySelectorAll('.toggle-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('how-' + view).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

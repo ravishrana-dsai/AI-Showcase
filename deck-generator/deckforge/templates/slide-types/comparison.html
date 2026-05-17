@@ -1,0 +1,30 @@
+<section class="slide">
+  <div class="slide-bg"></div>
+  <div class="slide-inner">
+    <div class="label">{{deck.client}}</div>
+    <h2 class="heading-lg" style="margin-top: 12px;">{{slide.heading}}</h2>
+
+    <div class="comparison-table">
+      <!-- Column headers -->
+      <div class="comparison-header">
+        <div class="comparison-header-cell comparison-header-cell--label">Feature</div>
+        <div class="comparison-header-cell">{{slide.leftLabel}}</div>
+        <div class="comparison-header-cell">{{slide.rightLabel}}</div>
+      </div>
+
+      <!-- Repeat for each row in slide.rows -->
+      <!-- If row.winner === "left": add class comparison-cell--win to left cell and comparison-cell--lose to right -->
+      <!-- If row.winner === "right": reverse -->
+      <!-- If row.winner === "tie": no win/lose classes -->
+      <div class="comparison-row">
+        <div class="comparison-label">{{row.label}}</div>
+        <div class="comparison-cell comparison-cell--win">{{row.left}}</div>
+        <div class="comparison-cell comparison-cell--lose">{{row.right}}</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <span class="footer-client">{{deck.client}}</span>
+    <span class="footer-slide-num">{{slide.id}}</span>
+  </div>
+</section>

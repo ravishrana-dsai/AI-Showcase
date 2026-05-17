@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeckForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #070b14;
+      --surface:    #0f1824;
+      --surface2:   #162032;
+      --border:     rgba(255,255,255,0.07);
+      --border2:    rgba(255,255,255,0.12);
+      --accent:     #00C9A7;
+      --accent-dim: rgba(0,201,167,0.12);
+      --text:       #f0f4f8;
+      --muted:      #6b7a8d;
+      --danger:     #f87171;
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(7,11,20,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .header__logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .header__tag {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Main layout ── */
+    .main {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 56px 24px 120px;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .page-sub {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 52px;
+    }
+
+    /* ── Steps ── */
+    .step {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .step--active { border-color: var(--border2); }
+
+    .step__header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 28px;
+      cursor: default;
+    }
+
+    .step__num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .step--active .step__num {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .step--done .step__num {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #070b14;
+    }
+
+    .step__num--check::after { content: '✓'; font-size: 14px; }
+
+    .step__title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .step__badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface2);
+      border-radius: 4px;
+      padding: 3px 8px;
+      margin-left: auto;
+    }
+
+    .step__body {
+      padding: 0 28px 28px;
+      display: none;
+    }
+
+    .step--active .step__body { display: block; }
+
+    /* ── Form elements ── */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.15s;
+      resize: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="url"]:focus,
+    textarea:focus { border-color: var(--accent); }
+
+    textarea { min-height: 120px; line-height: 1.6; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+
+    /* ── Color pickers ── */
+    .color-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .color-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-swatch-wrap {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--border2);
+      cursor: pointer;
+    }
+
+    .color-swatch-wrap input[type="color"] {
+      position: absolute;
+      inset: -4px;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .color-swatch-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-swatch-wrap input[type="color"]::-webkit-color-swatch { border: none; }
+
+    .color-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    /* ── Image drop zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 12px;
+      padding: 28px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .drop-zone:hover, .drop-zone--over {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    .drop-zone__icon { font-size: 28px; margin-bottom: 8px; }
+
+    .drop-zone__text {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .drop-zone__text strong { color: var(--accent); }
+
+    /* ── Quick prompts ── */
+    .quick-prompts {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .qp-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Inter', system-ui, sans-serif;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .qp-btn:hover {
+      color: var(--text);
+      border-color: var(--border2);
+      background: rgba(255,255,255,0.05);
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s, opacity 0.15s;
+      text-decoration: none;
+    }
+
+    .btn--primary {
+      background: var(--accent);
+      color: #070b14;
+    }
+
+    .btn--primary:hover { background: #00b396; }
+
+    .btn--secondary {
+      background: var(--surface2);
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    .btn--secondary:hover { background: rgba(255,255,255,0.06); }
+
+    .btn--ghost {
+      background: transparent;
+      border-color: var(--border2);
+      color: var(--muted);
+    }
+
+    .btn--ghost:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(7,11,20,0.88);
+      backdrop-filter: blur(6px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      gap: 24px;
+    }
+
+    .loading-overlay--visible { display: flex; }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(0,201,167,0.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .loading-status {
+      font-size: 14px;
+      color: var(--muted);
+      min-width: 260px;
+      text-align: center;
+    }
+
+    .progress-bar-wrap {
+      width: 280px;
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.8s ease;
+    }
+
+    /* ── Result panel ── */
+    .result-panel {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .result-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .result-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .result-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .result-preview {
+      position: relative;
+      width: 100%;
+      background: #0a0a0a;
+      overflow: hidden;
+    }
+
+    .preview-scale-wrap {
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1280px;
+      height: 720px;
+      border: none;
+      transform-origin: top left;
+    }
+
+    .result-actions {
+      padding: 20px 28px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--text);
+      z-index: 300;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      max-width: 320px;
+    }
+
+    .toast--visible { opacity: 1; transform: translateY(0); }
+    .toast--error { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* ── Misc ── */
+    .hint-text {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <span class="header__logo">DeckForge</span>
+    <span class="header__tag">AI-Powered Consulting Decks</span>
+  </header>
+
+  <!-- ── Main ── -->
+  <main class="main">
+    <h1 class="page-title">Build your deck.</h1>
+    <p class="page-sub">Three steps. One polished PDF.</p>
+
+    <!-- ══ Step 0: Brand Setup ══ -->
+    <div class="step step--active" id="step-0">
+      <div class="step__header">
+        <div class="step__num" id="num-0">01</div>
+        <span class="step__title">Brand Setup</span>
+        <span class="step__badge">Optional</span>
+      </div>
+      <div class="step__body">
+        <p class="section-title">Colors</p>
+        <div class="color-grid">
+          <div class="color-item">
+            <div class="color-swatch-wrap">
+              <input type="color" id="color-primary" value="#0D1B2A" />
+            </div>
+            <span class="color-label">Background</span>
+          </div>
+          <div class="color-item">
+            <div class="color-swatch-wrap">
+              <input type="color" id="color-accent" value="#00C9A7" />
+            </div>
+            <span class="color-label">Accent</span>
+          </div>
+          <div class="color-item">
+            <div class="color-swatch-wrap">
+              <input type="color" id="color-secondary" value="#FFFFFF" />
+            </div>
+            <span class="color-label">Text</span>
+          </div>
+          <div class="color-item">
+            <div class="color-swatch-wrap">
+              <input type="color" id="color-surface" value="#132336" />
+            </div>
+            <span class="color-label">Surface</span>
+          </div>
+        </div>
+
+        <p class="section-title">Extract from image</p>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="brand-image" accept="image/png,image/jpeg,image/webp,.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+          <div class="drop-zone__icon">🎨</div>
+          <p class="drop-zone__text">
+            <strong>Drop a slide or logo</strong> to auto-extract brand colors
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="logo-url">Logo URL (optional)</label>
+          <input type="url" id="logo-url" placeholder="https://example.com/logo.png" />
+          <p class="hint-text">Paste a public image URL. Logos are injected as static image paths only.</p>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn--primary" onclick="goToStep(1)">Next: Describe your deck</button>
+          <button class="btn btn--ghost" onclick="resetBrand()">Reset to defaults</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Step 1: Brief ══ -->
+    <div class="step" id="step-1">
+      <div class="step__header">
+        <div class="step__num" id="num-1">02</div>
+        <span class="step__title">Describe Your Deck</span>
+      </div>
+      <div class="step__body">
+        <div class="form-row">
+          <div>
+            <label for="client-name">Client / Company Name</label>
+            <input type="text" id="client-name" placeholder="Acme Corp" />
+          </div>
+          <div>
+            <label for="deck-name">Deck Filename (optional)</label>
+            <input type="text" id="deck-name" placeholder="acme-q2-pitch" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Quick prompts</label>
+          <div class="quick-prompts">
+            <button class="qp-btn" onclick="fillPrompt('investor')">Investor Pitch</button>
+            <button class="qp-btn" onclick="fillPrompt('market')">Market Analysis</button>
+            <button class="qp-btn" onclick="fillPrompt('gtm')">GTM Strategy</button>
+            <button class="qp-btn" onclick="fillPrompt('product')">Product Overview</button>
+            <button class="qp-btn" onclick="fillPrompt('qbr')">Quarterly Review</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="brief-text">What should this deck cover?</label>
+          <textarea id="brief-text" rows="6" placeholder="e.g. A 6-slide investor deck for our Series A. Cover the $42B market opportunity, our product's real-time supply chain visibility platform, 48 customers with 140% NRR, and our land-and-expand GTM motion..."></textarea>
+          <p class="hint-text">Be specific. Include numbers, audience, key messages, and desired structure.</p>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn--primary" id="generate-btn" onclick="generate()">Generate Deck</button>
+          <button class="btn btn--ghost" onclick="goToStep(0)">Back</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Step 2: Result ══ -->
+    <div class="step" id="step-2" style="display:none;">
+      <div class="step__header">
+        <div class="step__num" id="num-2">03</div>
+        <span class="step__title">Your Deck</span>
+      </div>
+      <div class="step__body" style="padding: 0;">
+        <div class="result-panel">
+          <div class="result-header">
+            <div>
+              <div class="result-title" id="result-title">Generating...</div>
+              <div class="result-meta" id="result-meta"></div>
+            </div>
+          </div>
+
+          <div class="result-preview">
+            <div class="preview-scale-wrap" id="preview-wrap">
+              <iframe id="preview-frame" class="preview-iframe" src="" title="Deck preview"></iframe>
+            </div>
+          </div>
+
+          <div class="result-actions">
+            <a class="btn btn--primary" id="btn-open" href="#" target="_blank">Open Full Editor</a>
+            <a class="btn btn--secondary" id="btn-pdf" href="#" download>Download PDF</a>
+            <a class="btn btn--secondary" id="btn-html" href="#" download>Download HTML</a>
+            <button class="btn btn--ghost" onclick="startOver()">Start Over</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Loading overlay ── -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-title">Building your deck</div>
+    <div class="loading-status" id="loading-status">Analyzing your brief...</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <!-- ── Toast ── -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var currentStep = 0;
+    var deckData    = null;
+
+    // ── Step navigation ──────────────────────────────────────────────────────
+    function goToStep(n) {
+      document.getElementById('step-0').classList.remove('step--active');
+      document.getElementById('step-1').classList.remove('step--active');
+
+      currentStep = n;
+      var target = document.getElementById('step-' + n);
+      target.classList.add('step--active');
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    window.goToStep = goToStep;
+
+    // ── Quick prompts ─────────────────────────────────────────────────────────
+    var PROMPTS = {
+      investor: 'An investor pitch deck for our Series A fundraise. Cover the market opportunity (TAM/SAM/SOM), the problem we solve, our product and differentiation, traction metrics, the go-to-market strategy, and the team. Include a Key Takeaways slide.',
+      market:   'A market analysis deck covering the total addressable market, key segments, competitive landscape, major players and their weaknesses, trends driving demand, and where we see white space for our solution.',
+      gtm:      'A go-to-market strategy deck. Cover target customer segments, our sales motion (land and expand), pricing tiers, channel strategy, first-year milestones, and success metrics.',
+      product:  'A product overview deck for enterprise buyers. Cover the problem statement, our solution and key features, how it works (process flow), differentiators vs alternatives, and customer outcomes.',
+      qbr:      'A quarterly business review deck. Cover company highlights, revenue and growth metrics vs targets, top wins and case studies, key challenges and how we addressed them, and priorities for next quarter.',
+    };
+
+    window.fillPrompt = function (key) {
+      var ta = document.getElementById('brief-text');
+      ta.value = PROMPTS[key] || '';
+      ta.focus();
+    };
+
+    // ── Brand colors ─────────────────────────────────────────────────────────
+    function getBrand() {
+      return {
+        primary:   document.getElementById('color-primary').value,
+        secondary: document.getElementById('color-secondary').value,
+        accent:    document.getElementById('color-accent').value,
+        surface:   document.getElementById('color-surface').value,
+      };
+    }
+
+    window.resetBrand = function () {
+      document.getElementById('color-primary').value   = '#0D1B2A';
+      document.getElementById('color-secondary').value = '#FFFFFF';
+      document.getElementById('color-accent').value    = '#00C9A7';
+      document.getElementById('color-surface').value   = '#132336';
+      showToast('Colors reset to DeckForge defaults.');
+    };
+
+    // ── Brand extraction from image ───────────────────────────────────────────
+    var dropZone   = document.getElementById('drop-zone');
+    var brandInput = document.getElementById('brand-image');
+
+    dropZone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      dropZone.classList.add('drop-zone--over');
+    });
+    dropZone.addEventListener('dragleave', function () {
+      dropZone.classList.remove('drop-zone--over');
+    });
+    dropZone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropZone.classList.remove('drop-zone--over');
+      var file = e.dataTransfer.files[0];
+      if (file) uploadBrandImage(file);
+    });
+
+    brandInput.addEventListener('change', function () {
+      if (brandInput.files[0]) uploadBrandImage(brandInput.files[0]);
+    });
+
+    function uploadBrandImage(file) {
+      var form = new FormData();
+      form.append('image', file);
+
+      dropZone.querySelector('.drop-zone__text').innerHTML = 'Extracting colors...';
+
+      fetch('/api/extract-brand', { method: 'POST', body: form })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.error) {
+            showToast(data.error, true);
+            dropZone.querySelector('.drop-zone__text').innerHTML =
+              '<strong>Drop a slide or logo</strong> to auto-extract brand colors';
+            return;
+          }
+          if (data.primary)   document.getElementById('color-primary').value   = data.primary;
+          if (data.secondary) document.getElementById('color-secondary').value = data.secondary;
+          if (data.accent)    document.getElementById('color-accent').value    = data.accent;
+          if (data.surface)   document.getElementById('color-surface').value   = data.surface;
+          dropZone.querySelector('.drop-zone__text').innerHTML =
+            '<strong>Colors extracted!</strong> Adjust above if needed.';
+          showToast('Brand colors extracted successfully.');
+        })
+        .catch(function (e) {
+          showToast('Color extraction failed: ' + e.message, true);
+          dropZone.querySelector('.drop-zone__text').innerHTML =
+            '<strong>Drop a slide or logo</strong> to auto-extract brand colors';
+        });
+    }
+
+    // ── Generate ─────────────────────────────────────────────────────────────
+    window.generate = function () {
+      var client = document.getElementById('client-name').value.trim();
+      var brief  = document.getElementById('brief-text').value.trim();
+
+      if (!client) { showToast('Please enter a client name.', true); return; }
+      if (!brief)  { showToast('Please describe what this deck needs to cover.', true); return; }
+
+      showLoading();
+
+      var payload = {
+        brief:    brief,
+        client:   client,
+        deckName: document.getElementById('deck-name').value.trim() || client,
+        brand:    getBrand(),
+      };
+
+      fetch('/api/generate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          hideLoading();
+          if (data.error) { showToast(data.error, true); return; }
+          deckData = data;
+          showResult(data);
+        })
+        .catch(function (e) {
+          hideLoading();
+          showToast('Generation failed: ' + e.message, true);
+        });
+    };
+
+    // ── Loading ───────────────────────────────────────────────────────────────
+    var loadingMessages = [
+      'Analyzing your brief...',
+      'Planning slide structure...',
+      'Generating outline...',
+      'Designing slide layouts...',
+      'Rendering title slide...',
+      'Rendering content slides...',
+      'Applying your brand colors...',
+      'Generating visual diagrams...',
+      'Exporting to PDF...',
+      'Polishing final touches...',
+    ];
+
+    var loadingTimer   = null;
+    var progressTimer  = null;
+
+    function showLoading() {
+      var overlay = document.getElementById('loading-overlay');
+      var bar     = document.getElementById('progress-bar');
+      var status  = document.getElementById('loading-status');
+
+      overlay.classList.add('loading-overlay--visible');
+
+      var msgIdx  = 0;
+      var progress = 0;
+
+      status.textContent = loadingMessages[0];
+
+      loadingTimer = setInterval(function () {
+        msgIdx = (msgIdx + 1) % loadingMessages.length;
+        status.textContent = loadingMessages[msgIdx];
+      }, 5000);
+
+      progressTimer = setInterval(function () {
+        progress = Math.min(progress + (100 / 70), 90);
+        bar.style.width = progress + '%';
+      }, 1000);
+    }
+
+    function hideLoading() {
+      clearInterval(loadingTimer);
+      clearInterval(progressTimer);
+      document.getElementById('progress-bar').style.width = '100%';
+      setTimeout(function () {
+        document.getElementById('loading-overlay').classList.remove('loading-overlay--visible');
+        document.getElementById('progress-bar').style.width = '0%';
+      }, 300);
+    }
+
+    // ── Show result ───────────────────────────────────────────────────────────
+    function showResult(data) {
+      document.getElementById('step-2').style.display = 'block';
+
+      document.getElementById('result-title').textContent = data.title;
+      document.getElementById('result-meta').textContent  =
+        data.slideCount + ' slides  |  ' + data.deckId;
+
+      document.getElementById('btn-open').href  = data.htmlUrl;
+      document.getElementById('btn-pdf').href   = data.pdfUrl;
+      document.getElementById('btn-html').href  = data.htmlUrl;
+
+      // Auto-open deck in full screen editor
+      window.open(data.htmlUrl, '_blank');
+
+      // Scale iframe to fit the preview container
+      var frame = document.getElementById('preview-frame');
+      frame.src = data.htmlUrl;
+      frame.addEventListener('load', scalePreview, { once: true });
+
+      // Mark steps done
+      document.getElementById('step-0').classList.remove('step--active');
+      document.getElementById('step-1').classList.remove('step--active');
+
+      var n0 = document.getElementById('num-0');
+      var n1 = document.getElementById('num-1');
+      n0.classList.add('step__num--check');
+      n1.classList.add('step__num--check');
+
+      document.getElementById('step-2').classList.add('step--active');
+      document.getElementById('step-2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function scalePreview() {
+      var wrap  = document.getElementById('preview-wrap');
+      var frame = document.getElementById('preview-frame');
+      var scale = wrap.offsetWidth / 1280;
+      frame.style.transform = 'scale(' + scale + ')';
+      // Adjust the wrapper height to match scaled iframe
+      wrap.style.paddingTop  = '';
+      wrap.style.height      = (720 * scale) + 'px';
+      wrap.style.position    = 'relative';
+    }
+
+    window.addEventListener('resize', function () {
+      if (deckData) scalePreview();
+    });
+
+    // ── Start over ────────────────────────────────────────────────────────────
+    window.startOver = function () {
+      deckData = null;
+      document.getElementById('step-2').style.display = 'none';
+      document.getElementById('step-2').classList.remove('step--active');
+      document.getElementById('preview-frame').src = '';
+
+      var n0 = document.getElementById('num-0');
+      var n1 = document.getElementById('num-1');
+      n0.classList.remove('step__num--check');
+      n1.classList.remove('step__num--check');
+
+      document.getElementById('brief-text').value   = '';
+      document.getElementById('client-name').value  = '';
+      document.getElementById('deck-name').value    = '';
+
+      goToStep(0);
+    };
+
+    // ── Toast ─────────────────────────────────────────────────────────────────
+    var toastTimer = null;
+    function showToast(msg, isError) {
+      var el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.toggle('toast--error', Boolean(isError));
+      el.classList.add('toast--visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        el.classList.remove('toast--visible');
+      }, 4000);
+    }
+
+    // ── Check API key on load ─────────────────────────────────────────────────
+    fetch('/api/health')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.hasKey) {
+          showToast('GEMINI_API_KEY not found in .env. Generation will fail.', true);
+        }
+      })
+      .catch(function () {});
+
+  }());
+  </script>
+</body>
+</html>

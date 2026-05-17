@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Setup — Claude Usage Tracker</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f12; color: #f0f0f5; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; font-size: 13px; padding: 32px; line-height: 1.6; }
+  h1 { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: #d97757; }
+  .subtitle { color: #8888a0; font-size: 12px; margin-bottom: 28px; }
+  .step { margin-bottom: 24px; }
+  .step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .num { width: 24px; height: 24px; border-radius: 50%; background: #7c6af7; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  h2 { font-size: 14px; font-weight: 600; }
+  p { color: #8888a0; font-size: 12px; margin-bottom: 10px; }
+  .code { background: #0a0a0d; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 12px 14px; font-family: 'SF Mono', monospace; font-size: 12px; color: #5ee0c0; line-height: 1.8; }
+  .note { background: rgba(240,184,75,0.08); border: 1px solid rgba(240,184,75,0.2); border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #f0b84b; margin-top: 24px; }
+</style>
+</head>
+<body>
+<h1>Claude Usage Tracker — Setup</h1>
+<p class="subtitle">Follow these steps to route each Claude product through the local proxy.</p>
+
+<div class="step">
+  <div class="step-header"><div class="num">1</div><h2>Claude Code</h2></div>
+  <p>Add to <code>~/.zshrc</code> or <code>~/.bash_profile</code>, then restart your terminal:</p>
+  <div class="code">
+    export ANTHROPIC_BASE_URL=http://127.0.0.1:9876<br>
+    export HTTP_PROXY=http://127.0.0.1:9876<br>
+    export HTTPS_PROXY=http://127.0.0.1:9876<br>
+    export NODE_TLS_REJECT_UNAUTHORIZED=0
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="num">2</div><h2>Claude Desktop & Cowork</h2></div>
+  <p>Run these two commands in Terminal (replace "Wi-Fi" with your interface name if different):</p>
+  <div class="code">
+    networksetup -setwebproxy Wi-Fi 127.0.0.1 9876<br>
+    networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 9876
+  </div>
+  <p style="margin-top:10px;">To disable later: <code>networksetup -setwebproxystate Wi-Fi off</code></p>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="num">3</div><h2>Claude.ai in Browser</h2></div>
+  <p>Install <strong>SwitchyOmega</strong> for Chrome, create a proxy profile: HTTP proxy at <code>127.0.0.1</code> port <code>9876</code>. Enable when using Claude.ai.</p>
+</div>
+
+<div class="step">
+  <div class="step-header"><div class="num">4</div><h2>For Full HTTPS Decryption (optional)</h2></div>
+  <p>Install mitmproxy for complete token counts from encrypted traffic:</p>
+  <div class="code">
+    pip install mitmproxy<br>
+    mitmproxy --listen-port 9876 --ssl-insecure
+  </div>
+</div>
+
+<div class="note">⚠️ The built-in proxy captures connection metadata and HTTP traffic. Full HTTPS decryption requires mitmproxy and trusting its CA certificate in Keychain Access.</div>
+</body>
+</html>
