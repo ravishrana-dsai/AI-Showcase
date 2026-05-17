@@ -62,3 +62,4 @@ uploads/
 bot_activity.log
 bot_stats.json
 processed_posts.json
+.turbo/
