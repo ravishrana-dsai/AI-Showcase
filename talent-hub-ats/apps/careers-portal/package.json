@@ -1,0 +1,31 @@
+{
+  "name": "@talent-hub/careers-portal",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3051 --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0 --port 3051",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "@talent-hub/shared": "*",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sonner": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "postcss": "latest",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

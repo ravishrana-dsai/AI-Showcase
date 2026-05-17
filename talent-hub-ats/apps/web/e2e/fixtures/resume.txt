@@ -1,0 +1,4 @@
+E2E Test Resume
+Candidate for automated test
+Email: e2e-applicant@example.com
+Skills: Testing, Playwright, Next.js

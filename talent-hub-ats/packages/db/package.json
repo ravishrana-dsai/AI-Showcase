@@ -1,0 +1,24 @@
+{
+  "name": "@talent-hub/db",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "push": "prisma db push",
+    "migrate": "prisma migrate dev",
+    "studio": "prisma studio",
+    "seed": "tsx src/seed.ts",
+    "remove-e2e-data": "tsx src/remove-e2e-data.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0",
+    "tsx": "latest",
+    "typescript": "^5.7.0"
+  }
+}

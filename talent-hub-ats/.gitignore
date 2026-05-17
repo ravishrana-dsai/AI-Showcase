@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+out/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.portal
+.env.careers.portal
+
+# IDE / local tools
+.vscode/
+.idea/
+
+# Local-only (not for remote)
+CLAUDE.md.local
+talent_hub_dump.sql
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Prisma
+packages/db/generated/
+
+# Docker volumes
+.docker-data/
+
+# SSL / Let's Encrypt (production only)
+ssl/
+certbot-webroot/
+nginx/conf.d/01-http.conf.disabled
+nginx/conf.d/02-ssl.conf
+
+# Logs
+*.log
+npm-debug.log*
+
+# Playwright
+playwright-report/
+test-results/
+
+# Local DB
+*.db
+*.db-journal
+
+# Local resume/profile samples (run: npm run parse-samples -- <folder>)
+apps/web/samples/
+
+# Uploads (user data)
+uploads/

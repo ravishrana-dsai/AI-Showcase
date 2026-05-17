@@ -1,0 +1,39 @@
+{
+  "name": "talent-hub",
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "npm run db:generate",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test:unit": "npm run test:unit --workspace=@talent-hub/web",
+    "parse-samples": "npm run parse-samples --workspace=@talent-hub/web --",
+    "db:generate": "npm run generate --workspace=@talent-hub/db",
+    "db:push": "npm run push --workspace=@talent-hub/db",
+    "db:migrate": "npm run migrate --workspace=@talent-hub/db",
+    "db:seed": "npm run seed --workspace=@talent-hub/db",
+    "db:studio": "npm run studio --workspace=@talent-hub/db",
+    "db:remove-e2e-data": "npm run remove-e2e-data --workspace=@talent-hub/db"
+  },
+  "devDependencies": {
+    "turbo": "latest",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "fastest-levenshtein": "^1.0.16",
+    "googleapis": "^171.4.0",
+    "mammoth": "^1.11.0",
+    "officeparser": "^6.0.4",
+    "pdf-parse": "^2.4.5",
+    "recharts": "^3.8.0",
+    "unpdf": "^1.4.0"
+  }
+}

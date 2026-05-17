@@ -1,0 +1,941 @@
+// ===========================================
+// Talent Hub - Database Schema
+// In-house ATS (Lever Replica)
+// PostgreSQL for production, SQLite for local dev (set DATABASE_URL accordingly)
+// ===========================================
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// ORGANIZATION & USERS
+// ===========================================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  website   String?
+  industry  String?
+  size      String?
+  settings         String   @default("{}")
+  visibilityConfig Json     @default("{}")
+  // Google SSO
+  googleDomain   String?      // kept for legacy / single-domain compat
+  googleDomains  String[]     // multi-domain list (primary source of truth)
+  ssoDefaultRole String  @default("RECRUITER")
+  ssoEnabled     Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  jobs          Job[]
+  departments   Department[]
+  locations     Location[]
+  tags          Tag[]
+  emailTemplates EmailTemplate[]
+  pipelineTemplates PipelineTemplate[]
+  customFieldDefinitions CustomFieldDefinition[]
+  webhooks      Webhook[]
+  apiKeys       ApiKey[]
+  auditLogs     AuditLog[]
+  calendarIntegrations CalendarIntegration[]
+  careerPageConfig CareerPageConfig?
+
+  @@map("organizations")
+}
+
+model CareerPageConfig {
+  id               String       @id @default(cuid())
+  organizationId   String       @unique
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Branding
+  logoUrl          String?
+  bannerImageUrl   String?
+  primaryColor     String       @default("#7c3aed")
+  accentColor      String       @default("#6d28d9")
+  backgroundColor  String       @default("#000000")
+
+  // Hero content
+  heroHeadline     String       @default("Join Our Team.")
+  heroSubheadline  String       @default("Build What Matters.")
+  heroDescription  String       @default("We are looking for talented people who want to do the best work of their careers.")
+
+  // Section toggles
+  showValues       Boolean      @default(true)
+  showBenefits     Boolean      @default(true)
+  showTestimonials Boolean      @default(true)
+  showStats        Boolean      @default(true)
+
+  // Content arrays (JSON arrays of objects)
+  values           Json         @default("[]")
+  benefits         Json         @default("[]")
+  testimonials     Json         @default("[]")
+  stats            Json         @default("[]")
+
+  // Social links
+  linkedinUrl      String?
+  twitterUrl       String?
+  githubUrl        String?
+  instagramUrl     String?
+
+  // SEO
+  metaTitle        String?
+  metaDescription  String?
+  ogImageUrl       String?
+
+  // Advanced
+  customCss        String?
+  footerText       String?
+  privacyPolicyUrl String?
+  termsUrl         String?
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@map("career_page_configs")
+}
+
+model Department {
+  id             String       @id @default(cuid())
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parentId       String?
+  parent         Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children       Department[] @relation("DepartmentHierarchy")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  jobs Job[]
+  users User[]
+
+  @@unique([organizationId, name])
+  @@map("departments")
+}
+
+model Location {
+  id             String       @id @default(cuid())
+  name           String
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  timezone       String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  jobs Job[]
+
+  @@map("locations")
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  name           String?
+  passwordHash   String?
+  avatar         String?
+  phone          String?
+  title          String?
+  role           String       @default("RECRUITER")
+  isActive       Boolean      @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  departmentId   String?
+  department     Department?  @relation(fields: [departmentId], references: [id])
+  emailVerified  DateTime?
+  lastLoginAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  managedJobs    Job[]        @relation("HiringManager")
+  createdJobs    Job[]        @relation("JobCreator")
+  assignedApplications Application[] @relation("Recruiter")
+  interviews     InterviewPanelist[]
+  scorecards     Scorecard[]
+  notes          Note[]
+  activities     ActivityLog[] @relation("ActivityActor")
+  notifications  Notification[]
+  requisitionApprovals RequisitionApproval[]
+  offerApprovals OfferApproval[]
+  jobPostingApprovals  JobPostingApproval[]
+  calendarIntegration  CalendarIntegration?
+  jobAssignments       UserJobAssignment[]
+
+  @@map("users")
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ===========================================
+// JOBS & REQUISITIONS
+// ===========================================
+
+model Requisition {
+  id             String   @id @default(cuid())
+  title          String
+  departmentId   String?
+  locationId     String?
+  headcount      Int      @default(1)
+  priority       String   @default("MEDIUM")
+  status         String   @default("DRAFT")
+  justification  String?
+  salaryMin      Float?
+  salaryMax      Float?
+  salaryCurrency String?  @default("INR")
+  employmentType String   @default("FULL_TIME")
+  level          String?
+  organizationId String
+  createdById    String
+  closedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isDemo         Boolean  @default(false)
+
+  approvals RequisitionApproval[]
+  jobs      Job[]
+
+  @@map("requisitions")
+}
+
+model RequisitionApproval {
+  id            String      @id @default(cuid())
+  requisitionId String
+  requisition   Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  approverId    String
+  approver      User        @relation(fields: [approverId], references: [id])
+  order         Int
+  status        String      @default("PENDING")
+  comment       String?
+  decidedAt     DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@unique([requisitionId, approverId])
+  @@map("requisition_approvals")
+}
+
+model Job {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String
+  description     String
+  requirements    String?
+  benefits        String?
+  status          String   @default("DRAFT")
+  employmentType  String   @default("FULL_TIME")
+  experienceLevel String?
+  salaryMin       Float?
+  salaryMax       Float?
+  salaryCurrency  String?  @default("INR")
+  showSalary      Boolean  @default(false)
+  customFields    String   @default("{}")
+  openingParagraph String?
+  scoringCriteria  String   @default("[]")
+
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  departmentId    String?
+  department      Department?  @relation(fields: [departmentId], references: [id])
+  locationId      String?
+  location        Location?    @relation(fields: [locationId], references: [id])
+  hiringManagerId String?
+  hiringManager   User?        @relation("HiringManager", fields: [hiringManagerId], references: [id])
+  createdById     String
+  createdBy       User         @relation("JobCreator", fields: [createdById], references: [id])
+  requisitionId   String?
+  requisition     Requisition? @relation(fields: [requisitionId], references: [id])
+
+  publishedAt     DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  isDemo          Boolean  @default(false)
+
+  pipelineStages  PipelineStage[]
+  applications    Application[]
+  interviewPlans  InterviewPlan[]
+  screeningQuestions ScreeningQuestion[]
+  jobPostingApprovals JobPostingApproval[]
+  eeoResponses    EeoResponse[]
+  assignedUsers   UserJobAssignment[]
+
+  @@unique([organizationId, slug])
+  @@map("jobs")
+}
+
+model UserJobAssignment {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  assignedAt   DateTime @default(now())
+  assignedById String?
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@map("user_job_assignments")
+}
+
+model JobPostingApproval {
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  approverId String
+  approver   User     @relation(fields: [approverId], references: [id])
+  order      Int
+  status     String   @default("PENDING")
+  comment    String?
+  decidedAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  @@unique([jobId, approverId])
+  @@map("job_posting_approvals")
+}
+
+// ===========================================
+// PIPELINE & STAGES
+// ===========================================
+
+model PipelineTemplate {
+  id             String       @id @default(cuid())
+  name           String
+  isDefault      Boolean      @default(false)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  stages PipelineTemplateStage[]
+
+  @@map("pipeline_templates")
+}
+
+model PipelineTemplateStage {
+  id         String           @id @default(cuid())
+  name       String
+  order      Int
+  type       String           @default("CUSTOM")
+  templateId String
+  template   PipelineTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("pipeline_template_stages")
+}
+
+model PipelineStage {
+  id     String @id @default(cuid())
+  name   String
+  order  Int
+  type   String @default("CUSTOM")
+  jobId  String
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  applications         Application[]
+  stageHistory         StageHistory[]
+  rejectedApplications Application[]  @relation("RejectedAtStage")
+
+  @@unique([jobId, order])
+  @@map("pipeline_stages")
+}
+
+// ===========================================
+// CANDIDATES & APPLICATIONS
+// ===========================================
+
+model Candidate {
+  id             String   @id @default(cuid())
+  email          String
+  firstName      String
+  lastName       String
+  phone          String?
+  linkedinUrl    String?
+  portfolioUrl   String?
+  currentCompany String?
+  currentTitle   String?
+  location       String?
+  summary        String?
+  source         String?
+  sourceDetail   String?
+  expectedCtc    String?
+  noticePeriod   String?
+  customFields   String   @default("{}")
+  organizationId String
+  isArchived     Boolean  @default(false)
+  isDemo         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  applications Application[]
+  documents    Document[]
+  tags         CandidateTag[]
+  notes        Note[]
+  activities   ActivityLog[]
+  eeoResponse  EeoResponse?
+
+  @@unique([email, organizationId])
+  @@index([organizationId, phone])
+  @@map("candidates")
+}
+
+model CandidateTag {
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  tagId       String
+  tag         Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  assignedAt  DateTime  @default(now())
+
+  @@id([candidateId, tagId])
+  @@map("candidate_tags")
+}
+
+model Tag {
+  id             String       @id @default(cuid())
+  name           String
+  color          String?      @default("#6B7280")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  candidates CandidateTag[]
+
+  @@unique([organizationId, name])
+  @@map("tags")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  url         String
+  size        Int
+  mimeType    String
+  parsedText  String?  // Extracted plain text from resume (PDF/DOCX), capped at 10,000 chars
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  uploadedAt  DateTime  @default(now())
+
+  @@map("documents")
+}
+
+model Application {
+  id              String   @id @default(cuid())
+  candidateId     String
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobId           String
+  job             Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  recruiterId     String?
+  recruiter       User?     @relation("Recruiter", fields: [recruiterId], references: [id])
+  currentStageId  String
+  currentStage    PipelineStage @relation(fields: [currentStageId], references: [id])
+  status          String   @default("ACTIVE")
+  source          String?
+  referredBy      String?
+  screeningAnswers String  @default("[]")
+  customFields    String   @default("{}")
+  appliedAt       DateTime @default(now())
+  rejectedAt      DateTime?
+  rejectionCategory String?
+  rejectionReason   String?
+  rejectedStageId   String?
+  rejectedStage     PipelineStage? @relation("RejectedAtStage", fields: [rejectedStageId], references: [id])
+  withdrawnAt     DateTime?
+  hiredAt         DateTime?
+  archivedAt      DateTime?
+  updatedAt       DateTime @updatedAt
+  isDemo          Boolean  @default(false)
+
+  stageHistory StageHistory[]
+  interviews   Interview[]
+  scorecards   Scorecard[]
+  offer        Offer?
+
+  @@unique([candidateId, jobId])
+  @@index([jobId, status])
+  @@map("applications")
+}
+
+model StageHistory {
+  id            String        @id @default(cuid())
+  applicationId String
+  application   Application   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  stageId       String
+  stage         PipelineStage @relation(fields: [stageId], references: [id])
+  enteredAt     DateTime      @default(now())
+  exitedAt      DateTime?
+  movedById     String?
+
+  @@index([applicationId, stageId])
+  @@map("stage_history")
+}
+
+// ===========================================
+// SCREENING QUESTIONS
+// ===========================================
+
+model ScreeningQuestion {
+  id           String   @id @default(cuid())
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  question     String
+  type         String
+  options      String?
+  isRequired   Boolean  @default(false)
+  isKnockout   Boolean  @default(false)
+  knockoutAnswer String?
+  showToCandidate Boolean  @default(false)
+  order        Int
+  createdAt    DateTime @default(now())
+
+  @@map("screening_questions")
+}
+
+// ===========================================
+// INTERVIEWS & SCORECARDS
+// ===========================================
+
+model InterviewPlan {
+  id     String              @id @default(cuid())
+  name   String
+  jobId  String
+  job    Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  rounds InterviewPlanRound[]
+
+  @@map("interview_plans")
+}
+
+model InterviewPlanRound {
+  id              String        @id @default(cuid())
+  name            String
+  order           Int
+  durationMinutes Int           @default(60)
+  instructions    String?
+  interviewPlanId String
+  interviewPlan   InterviewPlan @relation(fields: [interviewPlanId], references: [id], onDelete: Cascade)
+
+  scorecardTemplate ScorecardTemplate?
+
+  @@map("interview_plan_rounds")
+}
+
+model ScorecardTemplate {
+  id       String                    @id @default(cuid())
+  roundId  String                    @unique
+  round    InterviewPlanRound        @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  criteria ScorecardTemplateCriteria[]
+
+  @@map("scorecard_templates")
+}
+
+model ScorecardTemplateCriteria {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  weight      Int               @default(1)
+  templateId  String
+  template    ScorecardTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("scorecard_template_criteria")
+}
+
+model Interview {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  title           String
+  type            String   @default("VIDEO")
+  status          String   @default("SCHEDULED")
+  scheduledAt     DateTime
+  durationMinutes Int      @default(60)
+  timezone        String   @default("UTC")
+  meetingLink     String?
+  calendarEventId String?
+  location        String?
+  notes           String?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  isDemo          Boolean  @default(false)
+
+  panelists  InterviewPanelist[]
+  scorecards Scorecard[]
+
+  @@map("interviews")
+}
+
+model InterviewPanelist {
+  id          String    @id @default(cuid())
+  interviewId String
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  role        String    @default("Interviewer")
+  isOptional  Boolean   @default(false)
+  respondedAt DateTime?
+  response    String?
+
+  @@unique([interviewId, userId])
+  @@map("interview_panelists")
+}
+
+model Scorecard {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interviewId   String?
+  interview     Interview?  @relation(fields: [interviewId], references: [id])
+  reviewerId    String
+  reviewer      User        @relation(fields: [reviewerId], references: [id])
+  overallRating String
+  recommendation String?
+  summary        String?
+  ratings        String   @default("[]")
+  attachmentUrl  String?
+  attachmentName String?
+  submittedAt    DateTime @default(now())
+
+  @@map("scorecards")
+}
+
+// ===========================================
+// OFFERS
+// ===========================================
+
+model Offer {
+  id              String      @id @default(cuid())
+  applicationId   String      @unique
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  status          String      @default("DRAFT")
+  title           String
+  salary          Float
+  salaryCurrency  String      @default("INR")
+  salaryPeriod    String      @default("ANNUAL")
+  equity          String?
+  bonus           String?
+  startDate       DateTime?
+  expiresAt       DateTime?
+  offerLetterUrl  String?
+  customFields    String      @default("{}")
+  sentAt          DateTime?
+  acceptedAt      DateTime?
+  declinedAt      DateTime?
+  voidedAt        DateTime?
+  declineReason   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  isDemo          Boolean     @default(false)
+
+  approvals OfferApproval[]
+
+  @@map("offers")
+}
+
+model OfferApproval {
+  id         String   @id @default(cuid())
+  offerId    String
+  offer      Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  approverId String
+  approver   User     @relation(fields: [approverId], references: [id])
+  order      Int
+  status     String   @default("PENDING")
+  comment    String?
+  decidedAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  @@unique([offerId, approverId])
+  @@map("offer_approvals")
+}
+
+// ===========================================
+// COMMUNICATION
+// ===========================================
+
+model EmailTemplate {
+  id             String       @id @default(cuid())
+  name           String
+  subject        String
+  body           String
+  category       String?
+  variables      String       @default("[]")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id          String   @id @default(cuid())
+  to          String
+  from        String
+  subject     String
+  body        String
+  templateId  String?
+  candidateId String?
+  status      String   @default("sent")
+  sentAt      DateTime @default(now())
+
+  @@map("email_logs")
+}
+
+// ===========================================
+// NOTES & ACTIVITY
+// ===========================================
+
+model Note {
+  id          String    @id @default(cuid())
+  content     String
+  isPrivate   Boolean   @default(false)
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  mentions    String    @default("[]")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("notes")
+}
+
+model ActivityLog {
+  id            String     @id @default(cuid())
+  type          String
+  description   String
+  metadata      String     @default("{}")
+  candidateId   String?
+  candidate     Candidate? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  actorId       String?
+  actor         User?      @relation("ActivityActor", fields: [actorId], references: [id])
+  organizationId String
+  createdAt     DateTime   @default(now())
+
+  @@map("activity_logs")
+}
+
+// ===========================================
+// EEO / COMPLIANCE
+// ===========================================
+
+model EeoResponse {
+  id          String    @id @default(cuid())
+  candidateId String    @unique
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobId       String?
+  job         Job?      @relation(fields: [jobId], references: [id])
+  gender      String?
+  race        String?
+  ethnicity   String?
+  veteranStatus String?
+  disabilityStatus String?
+  submittedAt DateTime  @default(now())
+
+  @@map("eeo_responses")
+}
+
+// ===========================================
+// NOTIFICATIONS
+// ===========================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// ===========================================
+// CUSTOM FIELDS
+// ===========================================
+
+model CustomFieldDefinition {
+  id             String       @id @default(cuid())
+  name           String
+  fieldKey       String
+  type           String
+  options        String?
+  entityType     String
+  isRequired     Boolean      @default(false)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, entityType, fieldKey])
+  @@map("custom_field_definitions")
+}
+
+// ===========================================
+// INTEGRATIONS & API
+// ===========================================
+
+model Webhook {
+  id             String       @id @default(cuid())
+  url            String
+  events         String
+  secret         String
+  isActive       Boolean      @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lastTriggeredAt DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  deliveries WebhookDelivery[]
+
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  webhookId   String
+  webhook     Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event       String
+  payload     String
+  statusCode  Int?
+  response    String?
+  success     Boolean  @default(false)
+  attempts    Int      @default(1)
+  deliveredAt DateTime @default(now())
+
+  @@map("webhook_deliveries")
+}
+
+model ApiKey {
+  id             String       @id @default(cuid())
+  name           String
+  key            String       @unique
+  hashedKey      String
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  isActive       Boolean      @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@map("api_keys")
+}
+
+// ===========================================
+// AUDIT LOG
+// ===========================================
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  action         String
+  entityType     String?
+  entityId       String?
+  actorId        String?
+  actorEmail     String?
+  ipAddress      String?
+  userAgent      String?
+  metadata       String       @default("{}")
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, actorId])
+  @@index([organizationId, action])
+  @@map("audit_logs")
+}
+
+// ===========================================
+// CALENDAR INTEGRATIONS (Phase 4)
+// ===========================================
+
+model CalendarIntegration {
+  id             String       @id @default(cuid())
+  provider       String       // "GOOGLE"
+  accessToken    String       // encrypted with ENCRYPTION_KEY
+  refreshToken   String       // encrypted with ENCRYPTION_KEY
+  tokenExpiresAt DateTime?
+  calendarId     String?      // "primary" by default
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  isActive       Boolean      @default(true)
+  needsReauth    Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("calendar_integrations")
+}
+
+// ===========================================
+// TA AGENT
+// ===========================================
+
+model AgentRun {
+  id             String   @id @default(cuid())
+  organizationId String
+  jobId          String
+  userId         String
+  step           String   // jd_polish | candidate_matching | email_drafting | interview_prep
+  status         String   // approved | skipped | regenerated
+  outputText     String   @default("")
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId, jobId])
+  @@index([organizationId, userId])
+  @@map("agent_runs")
+}

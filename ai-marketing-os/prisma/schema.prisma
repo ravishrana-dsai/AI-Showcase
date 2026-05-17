@@ -1,0 +1,109 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ContextInput {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  label     String
+  value     String
+  category  String   // 'brand' | 'product' | 'audience' | 'competitive'
+  updatedAt DateTime @updatedAt
+
+  @@map("context_inputs")
+}
+
+model BrandBible {
+  id               String   @id @default(cuid())
+  voicePrinciples  String[]
+  taglines         String[]
+  brandPositioning Json
+  updatedAt        DateTime @updatedAt
+
+  @@map("brand_bibles")
+}
+
+model PerformanceHistory {
+  id              String   @id @default(cuid())
+  agentTab        String
+  contentType     String
+  platform        String
+  outputPreview   String
+  engagementScore Float?
+  createdAt       DateTime @default(now())
+
+  @@map("performance_history")
+}
+
+model AudienceIntel {
+  id             String   @id @default(cuid())
+  segmentName    String
+  insights       Json
+  trendingTopics String[]
+  updatedAt      DateTime @updatedAt
+
+  @@map("audience_intel")
+}
+
+model RelationshipMemory {
+  id              String    @id @default(cuid())
+  contactName     String
+  contactType     String    // 'influencer' | 'court_partner' | 'media'
+  platform        String
+  followers       Int?
+  lastInteraction DateTime?
+  notes           String?
+  status          String    // 'prospect' | 'active' | 'partner'
+  createdAt       DateTime  @default(now())
+
+  @@map("relationship_memory")
+}
+
+model AgentOutput {
+  id               String        @id @default(cuid())
+  agentTab         String
+  inputPrompt      String
+  outputContent    String
+  modelUsed        String        // 'claude-sonnet-4-6' | 'gemini-2.5-pro'
+  inputTokens      Int
+  outputTokens     Int
+  costUsd          Float
+  approved         Boolean       @default(false)
+  extractionStatus String        @default("pending") // 'pending' | 'completed' | 'failed' | 'skipped'
+  createdAt        DateTime      @default(now())
+  insights         BrainInsight[]
+
+  @@map("agent_outputs")
+}
+
+model BrainInsight {
+  id             String      @id @default(cuid())
+  sourceOutputId String
+  sourceOutput   AgentOutput @relation(fields: [sourceOutputId], references: [id])
+  sourceAgentTab String
+  insightType    String      // 'brand_voice' | 'audience_segment' | 'content_performance' | 'competitive_intel' | 'general_learning'
+  category       String      // 'brand' | 'product' | 'audience' | 'competitive'
+  summary        String      // one sentence, max ~200 chars
+  detail         String      // 2-3 sentences
+  routedTo       String?     // which table it was written to
+  createdAt      DateTime    @default(now())
+
+  @@map("brain_insights")
+}
+
+model ApiCostLog {
+  id           String   @id @default(cuid())
+  agentTab     String
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costUsd      Float
+  createdAt    DateTime @default(now())
+
+  @@map("api_cost_logs")
+}

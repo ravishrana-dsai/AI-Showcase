@@ -1,0 +1,5 @@
+{
+  "/page": "app/page.js",
+  "/api/idea-to-prd/route": "app/api/idea-to-prd/route.js",
+  "/api/generate/route": "app/api/generate/route.js"
+}
