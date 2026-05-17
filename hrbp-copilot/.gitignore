@@ -1,0 +1,27 @@
+### dependencies
+node_modules/
+
+### production
+build/
+
+### env files (secrets)
+.env
+.env.*.local
+
+### logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+### OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+### CRA / tooling
+coverage/
+*.tsbuildinfo
+
+### local file database (do not commit)
+data/*.json
+data/**/*.json

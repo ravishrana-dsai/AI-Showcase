@@ -19,6 +19,9 @@ A portfolio of AI-powered projects spanning multi-agent systems, voice AI pipeli
 | [Claude Token Tracker](./claude-token-tracker) | Electron menubar app + Next.js dashboard for tracking Claude API cost per business unit | HTTPS proxy, SQLite, Gemini API (demo) |
 | [Prompt Library](./prompt-library) | Centralized, versioned prompt management system with web UI | JSON schema, HTML frontend |
 | [Tournament Tracker](./tournament-tracker) | Google Apps Script tournament management with bracket tracking and mobile-responsive UI | Google Apps Script, Google Sheets |
+| [Courts Tracker](./courts-tracker) | Ops platform for court partner onboarding, SLA tracking, request pipelines, and alerts | Next.js, Prisma, PostgreSQL, Redis, NextAuth |
+| [HRBP AI Copilot](./hrbp-copilot) | Paste 1:1 meeting notes, get structured HRBP analysis with risk flags, sentiment, and cross-session pattern tracking | Claude Sonnet 4.6, React, Express |
+| [Sports Tech Brand Playbook](./brand-playbook) | 7-chapter AI-assisted brand bible: positioning, voice, messaging, visual identity, and content strategy | AI-assisted strategy (Claude) |
 
 ---
 
